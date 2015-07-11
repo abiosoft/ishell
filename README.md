@@ -15,7 +15,16 @@ func main(){
 	// display welcome info.
 	shell.Println("Sample Interactive Shell")
 
-	// register a function for "exit" command.
+	// register a function for "greet" command.
+    shell.Register("greet", func(cmd string, args []string) (string, error) {
+        name := "Stranger"
+        if len(args) > 0 {
+            name = strings.Join(args, " ")
+        }
+		return "Hello "+name, nil
+	})
+
+    // register a function for "exit" command.
 	shell.Register("exit", func(cmd string, args []string) (string, error) {
 		shell.Stop()
 		return "bye!", nil
@@ -28,11 +37,13 @@ func main(){
 Execution
 ```
 Sample Interactive Shell
+>> greet Someone Somewhere
+Hello Someone Somewhere
 >> exit
 bye!
 ```
 
-#### Let's do more.
+#### Reading input.
 ```go
 // simulate an authentication
 shell.Register("login", func(cmd string, args []string) (string, error) {
@@ -66,6 +77,8 @@ ishell is in active development and can still change significantly.
 * Support multiline inputs.
 * Handle ^C interrupts.
 * Support coloured outputs.
+* Command history.
+* Tab completion.
 * Testing, testing, testing.
 
 ### Contribution

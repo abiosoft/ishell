@@ -216,7 +216,7 @@ func (s *Shell) Print(val ...interface{}) {
 	fmt.Fprint(s.writer, val...)
 }
 
-// Register registers a function for a command.
+// Register registers a function for command.
 func (s *Shell) Register(command string, function CmdFunc) {
 	s.functions[command] = function
 }

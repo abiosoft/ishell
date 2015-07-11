@@ -17,18 +17,27 @@ func main() {
 		shell.Println("Do you want to do more ? y/n:")
 		line, _ := shell.ReadLine()
 		if strings.ToLower(line) == "y" {
-			doMore(shell)
+			doLogin(shell)
 		}
 		shell.Stop()
 		return "bye!", nil
+	})
+
+	// register a function for "greet" command.
+	shell.Register("greet", func(cmd string, args []string) (string, error) {
+		name := "Stranger"
+		if len(args) > 0 {
+			name = strings.Join(args, " ")
+		}
+		return "Hello " + name, nil
 	})
 
 	// start shell
 	shell.Start()
 }
 
-func doMore(shell *ishell.Shell) {
-	shell.Stop()
+func doLogin(shell *ishell.Shell) {
+	shell.Println("Let's simulate login")
 
 	// prompt for input
 	shell.Println("Username:")
