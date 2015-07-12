@@ -3,6 +3,7 @@ package ishell
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -27,6 +28,7 @@ type Shell struct {
 	writer      io.Writer
 	active      bool
 	activeMutex sync.RWMutex
+	ignoreCase  bool
 	haltChan    chan struct{}
 }
 
@@ -127,7 +129,7 @@ func handleInput(s *Shell, line string) error {
 	if s.generic == nil {
 		return errNoHandler
 	}
-	output, err := s.generic(line, nil)
+	output, err := s.generic(line)
 	if err != nil {
 		return err
 	}
@@ -140,6 +142,9 @@ func handleInput(s *Shell, line string) error {
 func (s *Shell) handleCommand(line string) (bool, error) {
 	str := strings.SplitN(line, " ", 2)
 	cmd := str[0]
+	if s.ignoreCase {
+		cmd = strings.ToLower(cmd)
+	}
 	var args []string
 	if _, ok := s.functions[cmd]; !ok {
 		return false, nil
@@ -151,7 +156,7 @@ func (s *Shell) handleCommand(line string) (bool, error) {
 		}
 		args = args1
 	}
-	output, err := s.functions[cmd](cmd, args)
+	output, err := s.functions[cmd](args...)
 	if err != nil {
 		return true, err
 	}
@@ -177,8 +182,9 @@ func (s *Shell) Stop() {
 }
 
 // ReadLine reads a line from standard input.
-func (s *Shell) ReadLine() (line string, err error) {
-	return s.readLine()
+func (s *Shell) ReadLine() string {
+	line, _ := s.readLine()
+	return line
 }
 
 func (s *Shell) readLine() (line string, err error) {
@@ -191,8 +197,31 @@ func (s *Shell) readLine() (line string, err error) {
 	return ls.line, ls.err
 }
 
-func (s *Shell) nextLine() {
-	s.Print("\n")
+// ReadMultiLinesFunc reads multiple lines from standard input. It passes each read line to
+// f and stops reading when f returns false.
+func (s *Shell) ReadMultiLinesFunc(f func(string) bool) string {
+	lines := bytes.NewBufferString("")
+	for {
+		line := s.ReadLine()
+		fmt.Fprint(lines, line)
+		if !f(line) {
+			break
+		}
+		fmt.Fprintln(lines)
+	}
+	return lines.String()
+}
+
+// ReadMultiLines reads multiple lines from standard input. It stops reading when terminator
+// is encountered at the end of the line. It returns the lines read including terminator.
+// For more control, use ReadMultiLinesFunc.
+func (s *Shell) ReadMultiLines(terminator string) string {
+	return s.ReadMultiLinesFunc(func(line string) bool {
+		if strings.HasSuffix(strings.TrimSpace(line), terminator) {
+			return false
+		}
+		return true
+	})
 }
 
 // ReadPassword reads password from standard input without echoing the characters.
@@ -230,8 +259,8 @@ func (s *Shell) Unregister(command string) {
 
 // RegisterGeneric registers a generic function for all inputs.
 // It is called if the shell input could not be handled by any of the
-// registered functions. Unlike register, the entire input
-// is passed as first argument to CmdFunc and args is nil.
+// registered functions. Unlike Register, the entire line is passed as
+// first argument to CmdFunc.
 func (s *Shell) RegisterGeneric(function CmdFunc) {
 	s.generic = function
 }
@@ -269,4 +298,11 @@ func (s *Shell) Commands() []string {
 	}
 	sort.Strings(commands)
 	return commands
+}
+
+// IgnoreCase specifies whether commands should not be case sensitive.
+// Defaults to false i.e. commands are case sensitive.
+// If true, commands must be registered in lower cases. e.g. shell.Register("cmd", ...)
+func (s *Shell) IgnoreCase(ignore bool){
+	s.ignoreCase = ignore
 }

@@ -13,18 +13,26 @@ func main() {
 	shell.Println("Sample Interactive Shell")
 
 	// handle exit
-	shell.Register("login", func(cmd string, args []string) (string, error) {
+	shell.Register("login", func(args ...string) (string, error) {
 		doLogin(shell)
 		return "", nil
 	})
 
 	// register a function for "greet" command.
-	shell.Register("greet", func(cmd string, args []string) (string, error) {
+	shell.Register("greet", func(args ...string) (string, error) {
 		name := "Stranger"
 		if len(args) > 0 {
 			name = strings.Join(args, " ")
 		}
 		return "Hello " + name, nil
+	})
+
+	// read multiple lines with "multi" command
+	shell.Register("multi", func(args ...string) (string, error) {
+		shell.Println("Input multiple lines and end with semicolon ';'.")
+		lines := shell.ReadMultiLines(";")
+		shell.Println("Done reading. You wrote:")
+		return lines, nil
 	})
 
 	// start shell
@@ -39,7 +47,7 @@ func doLogin(shell *ishell.Shell) {
 
 	// prompt for input
 	shell.Print("Username: ")
-	username, _ := shell.ReadLine()
+	username := shell.ReadLine()
 	shell.Print("Password: ")
 	password := shell.ReadPassword(false)
 

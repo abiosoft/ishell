@@ -17,7 +17,7 @@ func main(){
 	shell.Println("Sample Interactive Shell")
 
 	// register a function for "greet" command.
-    shell.Register("greet", func(cmd string, args []string) (string, error) {
+    shell.Register("greet", func(args ...string) (string, error) {
         name := "Stranger"
         if len(args) > 0 {
             name = strings.Join(args, " ")
@@ -44,14 +44,14 @@ $
 #### Reading input.
 ```go
 // simulate an authentication
-shell.Register("login", func(cmd string, args []string) (string, error) {
+shell.Register("login", func(args ...string) (string, error) {
 	// disable the '>>' for cleaner same line input.
 	shell.ShowPrompt(false)
 	defer shell.ShowPrompt(true) // yes, revert after login.
 
     // get username
 	shell.Print("Username: ")
-	username, _ := shell.ReadLine()
+	username := shell.ReadLine()
 
     // get password. Does not echo characters.
 	shell.Print("Password: ")
@@ -64,17 +64,40 @@ shell.Register("login", func(cmd string, args []string) (string, error) {
 ```
 Execution
 ```
+>> login
 Username: someusername
 Password:
 Authentication Successful.
 ```
+
+How about multiline input.
+```go
+shell.Register("multi", func(args ...string) (string, error) {
+	shell.Println("Input some lines:")
+	// read until a semicolon ';' is found
+	lines := shell.ReadMultiLines(";")
+	shell.Println("You wrote:")
+	return lines, nil
+})
+```
+Execution
+```
+>> multi
+Input some lines:
+>> this is a sample 
+>> of multiline input;
+You wrote:
+this is a sample
+of multiline input;
+```
+
 Check example code for more.
 
 ### Note
 ishell is in active development and can still change significantly.
 
 ### Roadmap (in no particular order)
-* Support multiline inputs.
+* ~~Support multiline inputs~~.
 * Handle ^C interrupts.
 * Support coloured outputs.
 * Command history.
