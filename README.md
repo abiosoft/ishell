@@ -41,7 +41,7 @@ Hello Someone Somewhere
 $
 ```
 
-#### Reading input.
+##### Reading input.
 ```go
 // simulate an authentication
 shell.Register("login", func(args ...string) (string, error) {
@@ -70,7 +70,7 @@ Password:
 Authentication Successful.
 ```
 
-How about multiline input.
+##### How about multiline input.
 ```go
 shell.Register("multi", func(args ...string) (string, error) {
 	shell.Println("Input some lines:")
