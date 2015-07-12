@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
@@ -13,39 +14,36 @@ import (
 	"github.com/howeyc/gopass"
 )
 
-type (
-	// CmdFunc represents a command function that is called after an input to the shell.
-	// The shell input is split into command and arguments like cli args.
-	// The shell will print output if output != "".
-	CmdFunc func(command string, args []string) (output string, err error)
-
-	Shell struct {
-		prompt      string
-		functions   map[string]CmdFunc
-		generic     CmdFunc
-		reader      *shellReader
-		writer      io.Writer
-		active      bool
-		activeMutex sync.RWMutex
-		haltChan    chan struct{}
-	}
-)
-
 const (
 	defaultPrompt = ">> "
 )
 
+type Shell struct {
+	prompt      string
+	showPrompt  bool
+	functions   map[string]CmdFunc
+	generic     CmdFunc
+	reader      *shellReader
+	writer      io.Writer
+	active      bool
+	activeMutex sync.RWMutex
+	haltChan    chan struct{}
+}
+
 // NewShell creates a new shell with default settings. Uses standard output and default prompt ">>".
 func NewShell() *Shell {
-	return &Shell{
-		prompt:    defaultPrompt,
-		functions: make(map[string]CmdFunc),
+	shell := &Shell{
+		prompt:     defaultPrompt,
+		showPrompt: true,
+		functions:  make(map[string]CmdFunc),
 		reader: &shellReader{
 			scanner: bufio.NewReader(os.Stdin),
 		},
 		writer:   os.Stdout,
 		haltChan: make(chan struct{}),
 	}
+	addDefaultFuncs(shell)
+	return shell
 }
 
 // Start starts the shell. It reads inputs from standard input and calls registered functions
@@ -184,7 +182,9 @@ func (s *Shell) ReadLine() (line string, err error) {
 }
 
 func (s *Shell) readLine() (line string, err error) {
-	s.Print(s.prompt)
+	if s.showPrompt {
+		s.Print(s.prompt)
+	}
 	consumer := make(chan lineString)
 	s.reader.ReadLine(consumer)
 	ls := <-consumer
@@ -196,10 +196,12 @@ func (s *Shell) nextLine() {
 }
 
 // ReadPassword reads password from standard input without echoing the characters.
-// If mask is true, each chracter will be represented with astericks '*'. Note that
+// If mask is true, each character will be represented with asterisks '*'. Note that
 // this only works as expected when the standard input is a terminal.
 func (s *Shell) ReadPassword(mask bool) string {
-	fmt.Fprint(s.writer, s.prompt)
+	if s.showPrompt {
+		s.Print(s.prompt)
+	}
 	if mask {
 		return string(gopass.GetPasswdMasked())
 	}
@@ -216,7 +218,7 @@ func (s *Shell) Print(val ...interface{}) {
 	fmt.Fprint(s.writer, val...)
 }
 
-// Register registers a function for command.
+// Register registers a function for command. It overwrites existing function, if any.
 func (s *Shell) Register(command string, function CmdFunc) {
 	s.functions[command] = function
 }
@@ -239,7 +241,32 @@ func (s *Shell) SetPrompt(prompt string) {
 	s.prompt = prompt
 }
 
+// ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
+// Defaults to true.
+func (s *Shell) ShowPrompt(show bool) {
+	s.showPrompt = show
+}
+
 // SetOut sets the writer to write outputs to.
 func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
+}
+
+// PrintCommands prints a space separated list of registered commands to the shell.
+func (s *Shell) PrintCommands() {
+	out := strings.Join(s.Commands(), " ")
+	if out != "" {
+		s.Println("Commands:")
+		s.Println(out)
+	}
+}
+
+// Commands returns a sorted list of all registered commands.
+func (s *Shell) Commands() []string {
+	var commands []string
+	for command := range s.functions {
+		commands = append(commands, command)
+	}
+	sort.Strings(commands)
+	return commands
 }

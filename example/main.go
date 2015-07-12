@@ -13,14 +13,9 @@ func main() {
 	shell.Println("Sample Interactive Shell")
 
 	// handle exit
-	shell.Register("exit", func(cmd string, args []string) (string, error) {
-		shell.Println("Do you want to do more ? y/n:")
-		line, _ := shell.ReadLine()
-		if strings.ToLower(line) == "y" {
-			doLogin(shell)
-		}
-		shell.Stop()
-		return "bye!", nil
+	shell.Register("login", func(cmd string, args []string) (string, error) {
+		doLogin(shell)
+		return "", nil
 	})
 
 	// register a function for "greet" command.
@@ -37,12 +32,15 @@ func main() {
 }
 
 func doLogin(shell *ishell.Shell) {
+	shell.ShowPrompt(false)
+	defer shell.ShowPrompt(true)
+
 	shell.Println("Let's simulate login")
 
 	// prompt for input
-	shell.Println("Username:")
+	shell.Print("Username: ")
 	username, _ := shell.ReadLine()
-	shell.Println("Password:")
+	shell.Print("Password: ")
 	password := shell.ReadPassword(false)
 
 	// do something with username and password

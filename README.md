@@ -10,6 +10,7 @@ import "github.com/abiosoft/ishell"
 
 func main(){
     // create new shell.
+    // by default, new shell includes 'exit' and 'help' commands.
     shell := ishell.NewShell()
 
 	// display welcome info.
@@ -24,12 +25,6 @@ func main(){
 		return "Hello "+name, nil
 	})
 
-    // register a function for "exit" command.
-	shell.Register("exit", func(cmd string, args []string) (string, error) {
-		shell.Stop()
-		return "bye!", nil
-	})
-
 	// start shell
 	shell.Start()
 }
@@ -37,22 +32,29 @@ func main(){
 Execution
 ```
 Sample Interactive Shell
+>> help
+Commands:
+exit help greet
 >> greet Someone Somewhere
 Hello Someone Somewhere
 >> exit
-bye!
+$
 ```
 
 #### Reading input.
 ```go
 // simulate an authentication
 shell.Register("login", func(cmd string, args []string) (string, error) {
+	// disable the '>>' for cleaner same line input.
+	shell.ShowPrompt(false)
+	defer shell.ShowPrompt(true) // yes, revert after login.
+
     // get username
-	shell.Println("Username:")
+	shell.Print("Username: ")
 	username, _ := shell.ReadLine()
 
     // get password. Does not echo characters.
-	shell.Println("Password:")
+	shell.Print("Password: ")
 	password := shell.ReadPassword(false)
 
 	... // do something with username and password
@@ -62,10 +64,8 @@ shell.Register("login", func(cmd string, args []string) (string, error) {
 ```
 Execution
 ```
-Username:
->> someusername
+Username: someusername
 Password:
->>
 Authentication Successful.
 ```
 Check example code for more.
@@ -89,5 +89,7 @@ ishell is in active development and can still change significantly.
 MIT
 
 ### Credits
-* github.com/flynn/go-shlex for splitting input into command and args.
-* github.com/howeyc/gopass for reading passwords.
+Library | Use
+------- | -----
+[github.com/flynn/go-shlex](http://github.com/flynn/go-shlex) | splitting input into command and args.
+[github.com/howeyc/gopass](http://github.com/howeyc/gopass) | reading passwords.
