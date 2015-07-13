@@ -12,13 +12,13 @@ func main() {
 	// display info
 	shell.Println("Sample Interactive Shell")
 
-	// handle exit
+	// handle login
 	shell.Register("login", func(args ...string) (string, error) {
 		doLogin(shell)
 		return "", nil
 	})
 
-	// register a function for "greet" command.
+	// handle "greet".
 	shell.Register("greet", func(args ...string) (string, error) {
 		name := "Stranger"
 		if len(args) > 0 {
