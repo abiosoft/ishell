@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -303,6 +305,21 @@ func (s *Shell) Commands() []string {
 // IgnoreCase specifies whether commands should not be case sensitive.
 // Defaults to false i.e. commands are case sensitive.
 // If true, commands must be registered in lower cases. e.g. shell.Register("cmd", ...)
-func (s *Shell) IgnoreCase(ignore bool){
+func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
+}
+
+// ClearScreen clears the screen. Same behaviour as running 'clear' in unix terminal or 'cls' in windows cmd.
+func (s *Shell) ClearScreen() error {
+	return clearScreen(s)
+}
+
+func clearScreen(s *Shell) error {
+	c := "clear"
+	if runtime.GOOS == "windows" {
+		c = "cls"
+	}
+	cmd := exec.Command(c)
+	cmd.Stdout = s.writer
+	return cmd.Run()
 }

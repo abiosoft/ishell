@@ -1,5 +1,6 @@
 package ishell
 
+// ErrLevel is the severity of an error.
 type ErrLevel int
 
 const (
