@@ -31,7 +31,7 @@ func (s *shellReader) ReadLine(consumer chan lineString) {
 	// start reading
 	go func() {
 		line, err := s.scanner.ReadString('\n')
-		// remove training '\n'
+		// remove trailing '\n'
 		if err == nil {
 			line = line[:len(line)-1]
 		}

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	shell := ishell.NewShell()
+	shell := ishell.New()
 
 	// display info
 	shell.Println("Sample Interactive Shell")

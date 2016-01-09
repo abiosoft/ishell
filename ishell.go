@@ -34,8 +34,8 @@ type Shell struct {
 	haltChan    chan struct{}
 }
 
-// NewShell creates a new shell with default settings. Uses standard output and default prompt ">>".
-func NewShell() *Shell {
+// New creates a new shell with default settings. Uses standard output and default prompt ">>".
+func New() *Shell {
 	shell := &Shell{
 		prompt:     defaultPrompt,
 		showPrompt: true,
