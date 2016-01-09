@@ -11,7 +11,7 @@ import "github.com/abiosoft/ishell"
 func main(){
     // create new shell.
     // by default, new shell includes 'exit', 'help' and 'clear' commands.
-    shell := ishell.NewShell()
+    shell := ishell.New()
 
 	// display welcome info.
 	shell.Println("Sample Interactive Shell")
