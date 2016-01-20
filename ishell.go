@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bobappleyard/readline"
 	"github.com/flynn/go-shlex"
 	"github.com/howeyc/gopass"
 )
@@ -32,6 +33,7 @@ type Shell struct {
 	activeMutex sync.RWMutex
 	ignoreCase  bool
 	haltChan    chan struct{}
+	historyFile string
 }
 
 // New creates a new shell with default settings. Uses standard output and default prompt ">>".
@@ -190,11 +192,15 @@ func (s *Shell) ReadLine() string {
 }
 
 func (s *Shell) readLine() (line string, err error) {
+	prompt := ""
 	if s.showPrompt {
-		s.Print(s.prompt)
+		prompt = s.prompt
 	}
 	consumer := make(chan lineString)
-	s.reader.ReadLine(consumer)
+	s.reader.ReadLine(consumer, prompt)
+	if s.historyFile != "" {
+		readline.SaveHistory(s.historyFile)
+	}
 	ls := <-consumer
 	return ls.line, ls.err
 }
@@ -270,6 +276,13 @@ func (s *Shell) RegisterGeneric(function CmdFunc) {
 // SetPrompt sets the prompt string. The string to be displayed before the cursor.
 func (s *Shell) SetPrompt(prompt string) {
 	s.prompt = prompt
+}
+
+// SetHistoryFile sets the readline history file path. If left unset, history
+// will reset between invocations.
+func (s *Shell) SetHistoryFile(historyFile string) {
+	s.historyFile = historyFile
+	readline.LoadHistory(historyFile)
 }
 
 // ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.

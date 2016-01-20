@@ -3,6 +3,8 @@ package ishell
 import (
 	"bufio"
 	"sync"
+
+	"github.com/bobappleyard/readline"
 )
 
 type (
@@ -19,7 +21,7 @@ type (
 	}
 )
 
-func (s *shellReader) ReadLine(consumer chan lineString) {
+func (s *shellReader) ReadLine(consumer chan lineString, prompt string) {
 	s.Lock()
 	defer s.Unlock()
 	s.consumers = append(s.consumers, consumer)
@@ -30,11 +32,7 @@ func (s *shellReader) ReadLine(consumer chan lineString) {
 	s.reading = true
 	// start reading
 	go func() {
-		line, err := s.scanner.ReadString('\n')
-		// remove trailing '\n'
-		if err == nil {
-			line = line[:len(line)-1]
-		}
+		line, err := readline.String(prompt)
 		ls := lineString{line, err}
 		s.Lock()
 		defer s.Unlock()
@@ -44,6 +42,7 @@ func (s *shellReader) ReadLine(consumer chan lineString) {
 				c <- ls
 			}(c)
 		}
+		readline.AddHistory(line)
 		s.reading = false
 	}()
 
