@@ -7,11 +7,20 @@ ishell is an interactive shell library for creating interactive cli applications
 
 ```go
 import "github.com/abiosoft/ishell"
+import "os"
+import "fmt"
 
 func main(){
     // create new shell.
     // by default, new shell includes 'exit', 'help' and 'clear' commands.
     shell := ishell.New()
+
+    // set the prompt. default is '>> '
+    shell.SetPrompt(">> ")
+
+    // save command history between invocations.
+    home := os.Getenv("HOME")
+    shell.SetHistoryFile(fmt.Sprintf("%s/.ishell_history", home))
 
 	// display welcome info.
 	shell.Println("Sample Interactive Shell")
