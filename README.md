@@ -6,6 +6,7 @@ ishell is an interactive shell library for creating interactive cli applications
 ### Usage
 
 ```go
+import "strings"
 import "github.com/abiosoft/ishell"
 
 func main(){
