@@ -71,6 +71,12 @@ Password:
 Authentication Successful.
 ```
 
+##### Durable history.
+```go
+// Read and write history to $HOME/.ishell_history
+shell.SetHomeHistoryPath(".ishell_history")
+```
+
 ##### How about multiline input.
 ```go
 shell.Register("multi", func(args ...string) (string, error) {

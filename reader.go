@@ -1,8 +1,9 @@
 package ishell
 
 import (
-	"bufio"
 	"sync"
+
+	"github.com/chzyer/readline"
 )
 
 type (
@@ -12,7 +13,7 @@ type (
 	}
 
 	shellReader struct {
-		scanner   *bufio.Reader
+		scanner   *readline.Instance
 		consumers []chan lineString
 		reading   bool
 		sync.Mutex
@@ -30,11 +31,7 @@ func (s *shellReader) ReadLine(consumer chan lineString) {
 	s.reading = true
 	// start reading
 	go func() {
-		line, err := s.scanner.ReadString('\n')
-		// remove trailing '\n'
-		if err == nil {
-			line = line[:len(line)-1]
-		}
+		line, err := s.scanner.Readline()
 		ls := lineString{line, err}
 		s.Lock()
 		defer s.Unlock()

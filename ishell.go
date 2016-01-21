@@ -2,7 +2,6 @@
 package ishell
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/chzyer/readline"
 	"github.com/flynn/go-shlex"
 	"github.com/howeyc/gopass"
 )
@@ -32,16 +32,21 @@ type Shell struct {
 	activeMutex sync.RWMutex
 	ignoreCase  bool
 	haltChan    chan struct{}
+	historyFile string
 }
 
-// New creates a new shell with default settings. Uses standard output and default prompt ">>".
+// New creates a new shell with default settings. Uses standard output and default prompt ">> ".
 func New() *Shell {
+	rl, err := readline.New(defaultPrompt)
+	if err != nil {
+		panic(err)
+	}
 	shell := &Shell{
 		prompt:     defaultPrompt,
 		showPrompt: true,
 		functions:  make(map[string]CmdFunc),
 		reader: &shellReader{
-			scanner: bufio.NewReader(os.Stdin),
+			scanner: rl,
 		},
 		writer:   os.Stdout,
 		haltChan: make(chan struct{}),
@@ -172,6 +177,7 @@ func (s *Shell) handleCommand(line string) (bool, error) {
 // registered functions. A stopped shell is only inactive but totally functional.
 // Its functions can still be called.
 func (s *Shell) Stop() {
+	s.reader.scanner.Close()
 	if !s.Active() {
 		return
 	}
@@ -190,9 +196,6 @@ func (s *Shell) ReadLine() string {
 }
 
 func (s *Shell) readLine() (line string, err error) {
-	if s.showPrompt {
-		s.Print(s.prompt)
-	}
 	consumer := make(chan lineString)
 	s.reader.ReadLine(consumer)
 	ls := <-consumer
@@ -267,15 +270,52 @@ func (s *Shell) RegisterGeneric(function CmdFunc) {
 	s.generic = function
 }
 
+// rlPrompt returns the proper prompt for readline based on showPrompt and
+// prompt members.
+func (s *Shell) rlPrompt() string {
+	if s.showPrompt {
+		return s.prompt
+	}
+	return ""
+}
+
 // SetPrompt sets the prompt string. The string to be displayed before the cursor.
 func (s *Shell) SetPrompt(prompt string) {
 	s.prompt = prompt
+	s.reader.scanner.SetPrompt(prompt)
 }
 
 // ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
 // Defaults to true.
 func (s *Shell) ShowPrompt(show bool) {
 	s.showPrompt = show
+	s.reader.scanner.SetPrompt(s.rlPrompt())
+}
+
+// SetHistoryPath sets where readlines history file location. Use an empty
+// string to disable history file. It is empty by default.
+func (s *Shell) SetHistoryPath(path string) {
+	var err error
+
+	// Using scanner.SetHistoryPath doesn't initialize things properly and
+	// history file is never written. Simpler to just create a new readline
+	// Instance.
+	s.reader.scanner.Close()
+	s.reader.scanner, err = readline.NewEx(&readline.Config{
+		Prompt:      s.rlPrompt(),
+		HistoryFile: path,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+// SetHomeHistoryPath is a convenience method that sets the history path with a
+// $HOME prepended path.
+func (s *Shell) SetHomeHistoryPath(path string) {
+	home := os.Getenv("HOME")
+	abspath := fmt.Sprintf("%s/%s", home, path)
+	s.SetHistoryPath(abspath)
 }
 
 // SetOut sets the writer to write outputs to.
