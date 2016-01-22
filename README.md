@@ -100,6 +100,11 @@ of multiline input;
 
 Check example code for more.
 
+### Supported Platforms
+* [x] Linux
+* [x] OSX
+* [x] Windows
+
 ### Note
 ishell is in active development and can still change significantly.
 
