@@ -127,4 +127,4 @@ MIT
 Library | Use
 ------- | -----
 [github.com/flynn/go-shlex](http://github.com/flynn/go-shlex) | splitting input into command and args.
-[gopkg.in/readline.v1](gopkg.in/readline.v1) | history, tab completion and reading passwords.
+[gopkg.in/readline.v1](http://gopkg.in/readline.v1) | history, tab completion and reading passwords.
