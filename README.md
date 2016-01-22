@@ -54,9 +54,9 @@ shell.Register("login", func(args ...string) (string, error) {
 	shell.Print("Username: ")
 	username := shell.ReadLine()
 
-    // get password. Does not echo characters.
+    // get password.
 	shell.Print("Password: ")
-	password := shell.ReadPassword(false)
+	password := shell.ReadPassword()
 
 	... // do something with username and password
 
@@ -92,7 +92,7 @@ Execution
 >> multi
 Input some lines:
 >> this is a sample 
->> of multiline input;
+.. of multiline input;
 You wrote:
 this is a sample
 of multiline input;
@@ -104,12 +104,12 @@ Check example code for more.
 ishell is in active development and can still change significantly.
 
 ### Roadmap (in no particular order)
-* ~~Support multiline inputs~~.
-* Handle ^C interrupts.
-* Support coloured outputs.
-* Command history.
-* Tab completion.
-* Testing, testing, testing.
+* [x] Support multiline inputs.
+* [x] Command history.
+* [x] Tab completion.
+* [ ] Handle ^C interrupts.
+* [ ] Support coloured outputs.
+* [ ] Testing, testing, testing.
 
 ### Contribution
 1. Create an issue to discuss it.
@@ -122,4 +122,4 @@ MIT
 Library | Use
 ------- | -----
 [github.com/flynn/go-shlex](http://github.com/flynn/go-shlex) | splitting input into command and args.
-[github.com/howeyc/gopass](http://github.com/howeyc/gopass) | reading passwords.
+[gopkg.in/readline.v1](gopkg.in/readline.v1) | history, tab completion and reading passwords.

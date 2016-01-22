@@ -49,7 +49,7 @@ func doLogin(shell *ishell.Shell) {
 	shell.Print("Username: ")
 	username := shell.ReadLine()
 	shell.Print("Password: ")
-	password := shell.ReadPassword(false)
+	password := shell.ReadPassword()
 
 	// do something with username and password
 	shell.Println("Your inputs were", username, "and", password+".")

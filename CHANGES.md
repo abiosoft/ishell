@@ -1,6 +1,14 @@
 For now, dates (DD/MM/YYYY) are used until ishell gets stable enough to warrant tags.
 Attempts will be made to ensure non breaking updates as much as possible.
 
+#### 23/01/2015
+* Added history support.
+* Added tab completion support.
+* Added `SetHistoryPath`, `SetMultiPrompt`
+* Removed password masks.
+* **Breaking Change**: changed definition of `ReadPassword` from `(string)` to `()`
+* **Breaking Change**: changed name of `Shell` constructor from `NewShell` to `New`
+
 #### 13/07/2015
 * Added `ClearScreen` method.
 * Added `clear` to default commands.

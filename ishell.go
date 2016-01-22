@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -12,18 +13,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chzyer/readline"
 	"github.com/flynn/go-shlex"
-	"github.com/howeyc/gopass"
+	"gopkg.in/readline.v1"
 )
 
 const (
-	defaultPrompt = ">> "
+	defaultPrompt     = ">> "
+	defaultNextPrompt = "... "
 )
 
 type Shell struct {
-	prompt      string
-	showPrompt  bool
 	functions   map[string]CmdFunc
 	generic     CmdFunc
 	reader      *shellReader
@@ -39,14 +38,18 @@ type Shell struct {
 func New() *Shell {
 	rl, err := readline.New(defaultPrompt)
 	if err != nil {
-		panic(err)
+		log.Println("Shell or operating system not supported.")
+		log.Fatal(err)
 	}
 	shell := &Shell{
-		prompt:     defaultPrompt,
-		showPrompt: true,
-		functions:  make(map[string]CmdFunc),
+		functions: make(map[string]CmdFunc),
 		reader: &shellReader{
-			scanner: rl,
+			scanner:     rl,
+			prompt:      defaultPrompt,
+			multiPrompt: defaultNextPrompt,
+			showPrompt:  true,
+			buf:         bytes.NewBuffer(nil),
+			completer:   readline.NewPrefixCompleter(),
 		},
 		writer:   os.Stdout,
 		haltChan: make(chan struct{}),
@@ -197,7 +200,7 @@ func (s *Shell) ReadLine() string {
 
 func (s *Shell) readLine() (line string, err error) {
 	consumer := make(chan lineString)
-	s.reader.ReadLine(consumer)
+	s.reader.readLine(consumer)
 	ls := <-consumer
 	return ls.line, ls.err
 }
@@ -206,13 +209,24 @@ func (s *Shell) readLine() (line string, err error) {
 // f and stops reading when f returns false.
 func (s *Shell) ReadMultiLinesFunc(f func(string) bool) string {
 	lines := bytes.NewBufferString("")
+	currentLine := 0
 	for {
+		if currentLine == 1 {
+			// from second line, enable next line prompt.
+			s.reader.setMultiMode(true)
+		}
 		line := s.ReadLine()
 		fmt.Fprint(lines, line)
 		if !f(line) {
 			break
 		}
 		fmt.Fprintln(lines)
+		currentLine++
+	}
+	if currentLine > 0 {
+		// if more than one line is read
+		// revert to standard prompt.
+		s.reader.setMultiMode(false)
 	}
 	return lines.String()
 }
@@ -232,29 +246,45 @@ func (s *Shell) ReadMultiLines(terminator string) string {
 // ReadPassword reads password from standard input without echoing the characters.
 // If mask is true, each character will be represented with asterisks '*'. Note that
 // this only works as expected when the standard input is a terminal.
-func (s *Shell) ReadPassword(mask bool) string {
-	if s.showPrompt {
-		s.Print(s.prompt)
-	}
-	if mask {
-		return string(gopass.GetPasswdMasked())
-	}
-	return string(gopass.GetPasswd())
+func (s *Shell) ReadPassword() string {
+	return s.reader.readPassword()
 }
 
 // Println prints to output and ends with newline character.
 func (s *Shell) Println(val ...interface{}) {
+	s.reader.buf.Truncate(0)
 	fmt.Fprintln(s.writer, val...)
 }
 
 // Print prints to output.
 func (s *Shell) Print(val ...interface{}) {
+	s.reader.buf.Truncate(0)
+	fmt.Fprint(s.reader.buf, val...)
 	fmt.Fprint(s.writer, val...)
 }
 
 // Register registers a function for command. It overwrites existing function, if any.
 func (s *Shell) Register(command string, function CmdFunc) {
 	s.functions[command] = function
+
+	// readline library does not provide a better way
+	// yet than to regenerate the AutoComplete
+	// TODO modify when available
+	var pcItems []*readline.PrefixCompleter
+	for word, _ := range s.functions {
+		pcItems = append(pcItems, readline.PcItem(word))
+	}
+
+	var err error
+	// close current scanner and rebuild it with
+	// command in autocomplete
+	s.reader.scanner.Close()
+	config := s.reader.scanner.Config
+	config.AutoComplete = readline.NewPrefixCompleter(pcItems...)
+	s.reader.scanner, err = readline.NewEx(config)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Unregister unregisters a function for a command
@@ -270,44 +300,38 @@ func (s *Shell) RegisterGeneric(function CmdFunc) {
 	s.generic = function
 }
 
-// rlPrompt returns the proper prompt for readline based on showPrompt and
-// prompt members.
-func (s *Shell) rlPrompt() string {
-	if s.showPrompt {
-		return s.prompt
-	}
-	return ""
-}
-
 // SetPrompt sets the prompt string. The string to be displayed before the cursor.
 func (s *Shell) SetPrompt(prompt string) {
-	s.prompt = prompt
-	s.reader.scanner.SetPrompt(prompt)
+	s.reader.prompt = prompt
+	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
+}
+
+// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before
+// the cursor; starting from the second line of input.
+func (s *Shell) SetMultiPrompt(prompt string) {
+	s.reader.multiPrompt = prompt
 }
 
 // ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
 // Defaults to true.
 func (s *Shell) ShowPrompt(show bool) {
-	s.showPrompt = show
-	s.reader.scanner.SetPrompt(s.rlPrompt())
+	s.reader.showPrompt = show
+	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
 }
 
 // SetHistoryPath sets where readlines history file location. Use an empty
 // string to disable history file. It is empty by default.
-func (s *Shell) SetHistoryPath(path string) {
+func (s *Shell) SetHistoryPath(path string) error {
 	var err error
 
 	// Using scanner.SetHistoryPath doesn't initialize things properly and
 	// history file is never written. Simpler to just create a new readline
 	// Instance.
 	s.reader.scanner.Close()
-	s.reader.scanner, err = readline.NewEx(&readline.Config{
-		Prompt:      s.rlPrompt(),
-		HistoryFile: path,
-	})
-	if err != nil {
-		panic(err)
-	}
+	config := s.reader.scanner.Config
+	config.HistoryFile = path
+	s.reader.scanner, err = readline.NewEx(config)
+	return err
 }
 
 // SetHomeHistoryPath is a convenience method that sets the history path with a
