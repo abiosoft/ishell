@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	defaultPrompt     = ">> "
+	defaultPrompt     = ">>> "
 	defaultNextPrompt = "... "
 )
 
