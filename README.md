@@ -33,12 +33,12 @@ func main(){
 Execution
 ```
 Sample Interactive Shell
->> help
+>>> help
 Commands:
 exit help greet
->> greet Someone Somewhere
+>>> greet Someone Somewhere
 Hello Someone Somewhere
->> exit
+>>> exit
 $
 ```
 
@@ -46,7 +46,7 @@ $
 ```go
 // simulate an authentication
 shell.Register("login", func(args ...string) (string, error) {
-	// disable the '>>' for cleaner same line input.
+	// disable the '>>>' for cleaner same line input.
 	shell.ShowPrompt(false)
 	defer shell.ShowPrompt(true) // yes, revert after login.
 
@@ -65,7 +65,7 @@ shell.Register("login", func(args ...string) (string, error) {
 ```
 Execution
 ```
->> login
+>>> login
 Username: someusername
 Password:
 Authentication Successful.
@@ -89,10 +89,10 @@ shell.Register("multi", func(args ...string) (string, error) {
 ```
 Execution
 ```
->> multi
+>>> multi
 Input some lines:
->> this is a sample 
-.. of multiline input;
+>>> this is a sample 
+... of multiline input;
 You wrote:
 this is a sample
 of multiline input;
@@ -112,6 +112,7 @@ ishell is in active development and can still change significantly.
 * [x] Support multiline inputs.
 * [x] Command history.
 * [x] Tab completion.
+* [x] Support subcommands and help texts.
 * [ ] Handle ^C interrupts.
 * [ ] Support coloured outputs.
 * [ ] Testing, testing, testing.
