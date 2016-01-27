@@ -112,7 +112,7 @@ ishell is in active development and can still change significantly.
 * [x] Support multiline inputs.
 * [x] Command history.
 * [x] Tab completion.
-* [x] Support subcommands and help texts.
+* [ ] Support subcommands and help texts.
 * [ ] Handle ^C interrupts.
 * [ ] Support coloured outputs.
 * [ ] Testing, testing, testing.
