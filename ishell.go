@@ -139,7 +139,11 @@ func handleInput(s *Shell, line string) error {
 	if s.generic == nil {
 		return errNoHandler
 	}
-	output, err := s.generic(line)
+	args, err := shlex.Split(line)
+	if err != nil {
+		return err
+	}
+	output, err := s.generic(args...)
 	if err != nil {
 		return err
 	}
