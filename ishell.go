@@ -74,11 +74,11 @@ func (s *Shell) start() {
 
 shell:
 	for s.Active() {
-		var line string
+		var line []string
 		var err error
 		read := make(chan struct{})
 		go func() {
-			line, err = s.readLine()
+			line, err = s.read()
 			read <- struct{}{}
 		}()
 		select {
@@ -95,11 +95,9 @@ shell:
 			break
 		}
 
-		if line == "" {
+		if len(line) == 0 {
 			continue
 		}
-
-		line = strings.TrimSpace(line)
 
 		err = handleInput(s, line)
 		if err1, ok := err.(shellError); ok && err != nil {
@@ -129,7 +127,7 @@ func (s *Shell) Active() bool {
 	return s.active
 }
 
-func handleInput(s *Shell, line string) error {
+func handleInput(s *Shell, line []string) error {
 	handled, err := s.handleCommand(line)
 	if handled || err != nil {
 		return err
@@ -139,11 +137,7 @@ func handleInput(s *Shell, line string) error {
 	if s.generic == nil {
 		return errNoHandler
 	}
-	args, err := shlex.Split(line)
-	if err != nil {
-		return err
-	}
-	output, err := s.generic(args...)
+	output, err := s.generic(line...)
 	if err != nil {
 		return err
 	}
@@ -153,24 +147,16 @@ func handleInput(s *Shell, line string) error {
 	return nil
 }
 
-func (s *Shell) handleCommand(line string) (bool, error) {
-	str := strings.SplitN(line, " ", 2)
+func (s *Shell) handleCommand(str []string) (bool, error) {
+	//	str := strings.SplitN(line, " ", 2)
 	cmd := str[0]
 	if s.ignoreCase {
 		cmd = strings.ToLower(cmd)
 	}
-	var args []string
 	if _, ok := s.functions[cmd]; !ok {
 		return false, nil
 	}
-	if len(str) > 1 {
-		args1, err := shlex.Split(str[1])
-		if err != nil {
-			return false, err
-		}
-		args = args1
-	}
-	output, err := s.functions[cmd](args...)
+	output, err := s.functions[cmd](str[1:]...)
 	if err != nil {
 		return true, err
 	}
@@ -209,19 +195,67 @@ func (s *Shell) readLine() (line string, err error) {
 	return ls.line, ls.err
 }
 
+func (s *Shell) read() ([]string, error) {
+	heredoc := false
+	eof := ""
+	// heredoc multiline
+	lines, err := s.readMultiLinesFunc(func(line string) bool {
+		if !heredoc {
+			if strings.Contains(line, "<<") {
+				s := strings.SplitN(line, "<<", 2)
+				if eof = strings.TrimSpace(s[1]); eof != "" {
+					heredoc = true
+					return true
+				}
+			}
+		} else {
+			return line != eof
+		}
+		return strings.HasSuffix(strings.TrimSpace(line), "\\")
+	})
+
+	if heredoc {
+		s := strings.SplitN(lines, "<<", 2)
+		args, err1 := shlex.Split(s[0])
+
+		arg := strings.TrimSuffix(strings.SplitN(s[1], "\n", 2)[1], eof)
+		args = append(args, arg)
+		if err1 != nil {
+			return args, err1
+		}
+		return args, err
+	}
+
+	lines = strings.Replace(lines, "\\\n", " \n", -1)
+
+	args, err1 := shlex.Split(lines)
+	if err1 != nil {
+		return args, err1
+	}
+
+	return args, err
+}
+
 // ReadMultiLinesFunc reads multiple lines from standard input. It passes each read line to
 // f and stops reading when f returns false.
 func (s *Shell) ReadMultiLinesFunc(f func(string) bool) string {
+	lines, _ := s.readMultiLinesFunc(f)
+	return lines
+}
+
+func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 	lines := bytes.NewBufferString("")
 	currentLine := 0
+	var err error
 	for {
 		if currentLine == 1 {
 			// from second line, enable next line prompt.
 			s.reader.setMultiMode(true)
 		}
-		line := s.ReadLine()
+		var line string
+		line, err = s.readLine()
 		fmt.Fprint(lines, line)
-		if !f(line) {
+		if !f(line) || err != nil {
 			break
 		}
 		fmt.Fprintln(lines)
@@ -232,7 +266,7 @@ func (s *Shell) ReadMultiLinesFunc(f func(string) bool) string {
 		// revert to standard prompt.
 		s.reader.setMultiMode(false)
 	}
-	return lines.String()
+	return lines.String(), err
 }
 
 // ReadMultiLines reads multiple lines from standard input. It stops reading when terminator

@@ -1,7 +1,10 @@
 For now, dates (DD/MM/YYYY) are used until ishell gets stable enough to warrant tags.
 Attempts will be made to ensure non breaking updates as much as possible.
 
-#### 23/01/2015
+#### 07/02/2016
+Added multiline support to shell mode.
+
+#### 23/01/2016
 * Added history support.
 * Added tab completion support.
 * Added `SetHistoryPath`, `SetMultiPrompt`

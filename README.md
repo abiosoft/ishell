@@ -71,17 +71,23 @@ Password:
 Authentication Successful.
 ```
 
-##### Durable history.
-```go
-// Read and write history to $HOME/.ishell_history
-shell.SetHomeHistoryPath(".ishell_history")
-```
-
 ##### How about multiline input.
+Builtin support for multiple lines.
+```
+>>> This is \
+... multi line
+
+>>> Cool that << EOF
+... everything here goes
+... as a single argument. 
+... EOF
+```
+User defined
 ```go
 shell.Register("multi", func(args ...string) (string, error) {
 	shell.Println("Input some lines:")
 	// read until a semicolon ';' is found
+	// use shell.ReadMultiLinesFunc for more control.
 	lines := shell.ReadMultiLines(";")
 	shell.Println("You wrote:")
 	return lines, nil
@@ -91,11 +97,17 @@ Execution
 ```
 >>> multi
 Input some lines:
->>> this is a sample 
-... of multiline input;
+>>> this is user defined 
+... multiline input;
 You wrote:
-this is a sample
-of multiline input;
+this is user defined
+multiline input;
+```
+
+##### Durable history.
+```go
+// Read and write history to $HOME/.ishell_history
+shell.SetHomeHistoryPath(".ishell_history")
 ```
 
 Check example code for more.
