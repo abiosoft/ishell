@@ -417,11 +417,10 @@ func (s *Shell) ClearScreen() error {
 }
 
 func clearScreen(s *Shell) error {
-	c := "clear"
+	cmd := exec.Command("clear")
 	if runtime.GOOS == "windows" {
-		c = "cls"
+		cmd = exec.Command("cmd", "/C", "cls")
 	}
-	cmd := exec.Command(c)
 	cmd.Stdout = s.writer
 	return cmd.Run()
 }
