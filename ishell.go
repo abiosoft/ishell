@@ -308,7 +308,7 @@ func (s *Shell) Register(command string, function CmdFunc) {
 	// readline library does not provide a better way
 	// yet than to regenerate the AutoComplete
 	// TODO modify when available
-	var pcItems []*readline.PrefixCompleter
+	var pcItems []readline.PrefixCompleterInterface
 	for word, _ := range s.functions {
 		pcItems = append(pcItems, readline.PcItem(word))
 	}
