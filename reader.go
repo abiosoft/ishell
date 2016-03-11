@@ -40,7 +40,12 @@ func (s *shellReader) rlPrompt() string {
 }
 
 func (s *shellReader) readPassword() string {
-	password, _ := s.scanner.ReadPassword("")
+	prompt := ""
+	if s.buf.Len() > 0 {
+		prompt = s.buf.String()
+		s.buf.Truncate(0)
+	}
+	password, _ := s.scanner.ReadPassword(prompt)
 	return string(password)
 }
 
