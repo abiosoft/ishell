@@ -63,30 +63,26 @@ func (s *shellReader) readLine(consumer chan lineString) {
 	}
 	s.reading = true
 	// start reading
-	go func() {
-		// detect if print is called to
-		// prevent readline lib from clearing line.
-		// TODO find better way.
-		shellPrompt := s.prompt
-		prompt := s.rlPrompt()
-		if s.buf.Len() > 0 {
-			prompt += s.buf.String()
-			s.buf.Truncate(0)
-		}
 
-		// use printed statement as prompt
-		s.scanner.SetPrompt(prompt)
+	// detect if print is called to
+	// prevent readline lib from clearing line.
+	// TODO find better way.
+	shellPrompt := s.prompt
+	prompt := s.rlPrompt()
+	if s.buf.Len() > 0 {
+		prompt += s.buf.String()
+		s.buf.Truncate(0)
+	}
 
-		line, err := s.scanner.Readline()
+	// use printed statement as prompt
+	s.scanner.SetPrompt(prompt)
 
-		// reset prompt
-		s.scanner.SetPrompt(shellPrompt)
+	line, err := s.scanner.Readline()
 
-		ls := lineString{string(line), err}
-		s.Lock()
-		defer s.Unlock()
-		consumer <- ls
-		s.reading = false
-	}()
+	// reset prompt
+	s.scanner.SetPrompt(shellPrompt)
 
+	ls := lineString{string(line), err}
+	consumer <- ls
+	s.reading = false
 }
