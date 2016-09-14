@@ -15,7 +15,7 @@ type (
 
 	shellReader struct {
 		scanner      *readline.Instance
-		consumers    []chan lineString
+		consumers    chan lineString
 		reading      bool
 		readingMulti bool
 		buf          *bytes.Buffer
@@ -56,42 +56,33 @@ func (s *shellReader) setMultiMode(use bool) {
 func (s *shellReader) readLine(consumer chan lineString) {
 	s.Lock()
 	defer s.Unlock()
-	s.consumers = append(s.consumers, consumer)
+
 	// already reading
 	if s.reading {
 		return
 	}
 	s.reading = true
 	// start reading
-	go func() {
-		// detect if print is called to
-		// prevent readline lib from clearing line.
-		// TODO find better way.
-		shellPrompt := s.prompt
-		prompt := s.rlPrompt()
-		if s.buf.Len() > 0 {
-			prompt += s.buf.String()
-			s.buf.Truncate(0)
-		}
 
-		// use printed statement as prompt
-		s.scanner.SetPrompt(prompt)
+	// detect if print is called to
+	// prevent readline lib from clearing line.
+	// TODO find better way.
+	shellPrompt := s.prompt
+	prompt := s.rlPrompt()
+	if s.buf.Len() > 0 {
+		prompt += s.buf.String()
+		s.buf.Truncate(0)
+	}
 
-		line, err := s.scanner.Readline()
+	// use printed statement as prompt
+	s.scanner.SetPrompt(prompt)
 
-		// reset prompt
-		s.scanner.SetPrompt(shellPrompt)
+	line, err := s.scanner.Readline()
 
-		ls := lineString{string(line), err}
-		s.Lock()
-		defer s.Unlock()
-		for i := range s.consumers {
-			c := s.consumers[i]
-			go func(c chan lineString) {
-				c <- ls
-			}(c)
-		}
-		s.reading = false
-	}()
+	// reset prompt
+	s.scanner.SetPrompt(shellPrompt)
 
+	ls := lineString{string(line), err}
+	consumer <- ls
+	s.reading = false
 }

@@ -190,7 +190,8 @@ func (s *Shell) ReadLine() string {
 
 func (s *Shell) readLine() (line string, err error) {
 	consumer := make(chan lineString)
-	s.reader.readLine(consumer)
+	defer close(consumer)
+	go s.reader.readLine(consumer)
 	ls := <-consumer
 	return ls.line, ls.err
 }
