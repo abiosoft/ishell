@@ -15,7 +15,7 @@ type (
 
 	shellReader struct {
 		scanner      *readline.Instance
-		consumers    []chan lineString
+		consumers    chan lineString
 		reading      bool
 		readingMulti bool
 		buf          *bytes.Buffer
@@ -56,7 +56,7 @@ func (s *shellReader) setMultiMode(use bool) {
 func (s *shellReader) readLine(consumer chan lineString) {
 	s.Lock()
 	defer s.Unlock()
-	s.consumers = append(s.consumers, consumer)
+
 	// already reading
 	if s.reading {
 		return
@@ -85,12 +85,7 @@ func (s *shellReader) readLine(consumer chan lineString) {
 		ls := lineString{string(line), err}
 		s.Lock()
 		defer s.Unlock()
-		for i := range s.consumers {
-			c := s.consumers[i]
-			go func(c chan lineString) {
-				c <- ls
-			}(c)
-		}
+		consumer <- ls
 		s.reading = false
 	}()
 
