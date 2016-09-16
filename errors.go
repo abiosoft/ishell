@@ -1,42 +1,34 @@
 package ishell
 
-// ErrLevel is the severity of an error.
-type ErrLevel int
+// errLevel is the severity of an error.
+type errLevel int
 
 const (
-	LevelWarn ErrLevel = iota + 1
-	LevelStop
-	LevelExit
-	LevelPanic
+	levelWarn errLevel = iota + 1
+	levelStop
+	levelExit
+	levelPanic
 )
 
 var (
 	errNoHandler = WarnErr("No handler registered for input.")
 )
 
-// ShellError is an interractive shell error
+// shellError is an interractive shell error
 type shellError struct {
 	err   string
-	level ErrLevel
+	level errLevel
 }
 
 func (s shellError) Error() string {
 	return s.err
 }
 
-// NewErr creates a new error with specified level
-func NewErr(err string, level ErrLevel) error {
-	return shellError{
-		err:   err,
-		level: LevelWarn,
-	}
-}
-
 // WarnErr creates a Warn level error
 func WarnErr(err string) error {
 	return shellError{
 		err:   err,
-		level: LevelWarn,
+		level: levelWarn,
 	}
 }
 
@@ -44,7 +36,7 @@ func WarnErr(err string) error {
 func StopErr(err string) error {
 	return shellError{
 		err:   err,
-		level: LevelStop,
+		level: levelStop,
 	}
 }
 
@@ -52,7 +44,7 @@ func StopErr(err string) error {
 func ExitErr(err string) error {
 	return shellError{
 		err:   err,
-		level: LevelExit,
+		level: levelExit,
 	}
 }
 
@@ -60,6 +52,6 @@ func ExitErr(err string) error {
 func PanicErr(err string) error {
 	return shellError{
 		err:   err,
-		level: LevelPanic,
+		level: levelPanic,
 	}
 }

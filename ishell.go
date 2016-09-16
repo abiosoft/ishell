@@ -102,16 +102,16 @@ shell:
 		err = handleInput(s, line)
 		if err1, ok := err.(shellError); ok && err != nil {
 			switch err1.level {
-			case LevelWarn:
+			case levelWarn:
 				s.Println("Warning:", err)
 				continue shell
-			case LevelStop:
+			case levelStop:
 				s.Println(err)
 				break shell
-			case LevelExit:
+			case levelExit:
 				s.Println(err)
 				os.Exit(1)
-			case LevelPanic:
+			case levelPanic:
 				panic(err)
 			}
 		} else if !ok && err != nil {
@@ -148,7 +148,6 @@ func handleInput(s *Shell, line []string) error {
 }
 
 func (s *Shell) handleCommand(str []string) (bool, error) {
-	//	str := strings.SplitN(line, " ", 2)
 	cmd := str[0]
 	if s.ignoreCase {
 		cmd = strings.ToLower(cmd)
@@ -283,8 +282,7 @@ func (s *Shell) ReadMultiLines(terminator string) string {
 }
 
 // ReadPassword reads password from standard input without echoing the characters.
-// If mask is true, each character will be represented with asterisks '*'. Note that
-// this only works as expected when the standard input is a terminal.
+// Note that this only works as expected when the standard input is a terminal.
 func (s *Shell) ReadPassword() string {
 	return s.reader.readPassword()
 }
@@ -310,7 +308,7 @@ func (s *Shell) Register(command string, function CmdFunc) {
 	// yet than to regenerate the AutoComplete
 	// TODO modify when available
 	var pcItems []readline.PrefixCompleterInterface
-	for word, _ := range s.functions {
+	for word := range s.functions {
 		pcItems = append(pcItems, readline.PcItem(word))
 	}
 
