@@ -103,6 +103,19 @@ You wrote:
 this is user defined
 multiline input;
 ```
+##### Keyboard interrupt.
+Builtin interrupt handler.
+```
+>>> ^C
+Input Ctrl-C once more to exit
+>>> ^C
+Interrupted
+exit status 1
+```
+Custom
+```go
+shell.RegisterInterrupt(func(args ...string) (string, error) { ... })
+```
 
 ##### Durable history.
 ```go
@@ -124,8 +137,8 @@ ishell is in active development and can still change significantly.
 * [x] Support multiline inputs.
 * [x] Command history.
 * [x] Tab completion.
+* [x] Handle ^C interrupts.
 * [ ] Subcommands and help texts.
-* [ ] Handle ^C interrupts.
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
 

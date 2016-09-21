@@ -3,6 +3,7 @@ package ishell
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -25,6 +26,7 @@ const (
 type Shell struct {
 	functions   map[string]CmdFunc
 	generic     CmdFunc
+	interrupt   CmdFunc
 	reader      *shellReader
 	writer      io.Writer
 	active      bool
@@ -43,6 +45,7 @@ func New() *Shell {
 	}
 	shell := &Shell{
 		functions: make(map[string]CmdFunc),
+		interrupt: interruptFunc,
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
@@ -90,16 +93,25 @@ shell:
 		if err == io.EOF {
 			fmt.Println("EOF")
 			break
-		} else if err != nil {
+		} else if err != nil && err != readline.ErrInterrupt {
 			s.Println("Error:", err)
-			break
 		}
 
-		if len(line) == 0 {
-			continue
-		}
+		if err == readline.ErrInterrupt {
+			// interrupt received
+			err = handleInterrupt(s, line)
+		} else {
+			// reset interrupt counter
+			interruptCount = 0
 
-		err = handleInput(s, line)
+			// normal flow
+			if len(line) == 0 {
+				// no input line
+				continue
+			}
+
+			err = handleInput(s, line)
+		}
 		if err1, ok := err.(shellError); ok && err != nil {
 			switch err1.level {
 			case levelWarn:
@@ -145,6 +157,17 @@ func handleInput(s *Shell, line []string) error {
 		s.Println(output)
 	}
 	return nil
+}
+
+func handleInterrupt(s *Shell, line []string) error {
+	if s.interrupt == nil {
+		return errors.New("No interrupt handler")
+	}
+	output, err := s.interrupt(line...)
+	if output != "" {
+		s.Println(output)
+	}
+	return err
 }
 
 func (s *Shell) handleCommand(str []string) (bool, error) {
@@ -335,6 +358,11 @@ func (s *Shell) Unregister(command string) {
 // first argument to CmdFunc.
 func (s *Shell) RegisterGeneric(function CmdFunc) {
 	s.generic = function
+}
+
+// RegisterInterrupt registers a function to handle keyboard interrupt.
+func (s *Shell) RegisterInterrupt(function CmdFunc) {
+	s.interrupt = function
 }
 
 // SetPrompt sets the prompt string. The string to be displayed before the cursor.
