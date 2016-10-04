@@ -30,14 +30,15 @@ func addDefaultFuncs(s *Shell) {
 	s.Register("exit", exitFunc(s))
 	s.Register("help", helpFunc(s))
 	s.Register("clear", clearFunc(s))
+	s.RegisterInterrupt(interruptFunc(s))
 }
 
-var interruptCount = 0
-
-var interruptFunc = func(args ...string) (string, error) {
-	interruptCount++
-	if interruptCount >= 2 {
-		return "", ExitErr("Interrupted")
+func interruptFunc(s *Shell) CmdFunc {
+	return func(args ...string) (string, error) {
+		s.interruptCount++
+		if s.interruptCount >= 2 {
+			return "", ExitErr("Interrupted")
+		}
+		return "Input Ctrl-C once more to exit", nil
 	}
-	return "Input Ctrl-C once more to exit", nil
 }

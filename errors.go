@@ -4,14 +4,14 @@ package ishell
 type errLevel int
 
 const (
-	levelWarn errLevel = iota + 1
-	levelStop
-	levelExit
-	levelPanic
+	warnLevel errLevel = iota + 1
+	stopLevel
+	exitLevel
+	panicLevel
 )
 
 var (
-	errNoHandler = WarnErr("No handler registered for input.")
+	noHandlerErr = WarnErr("No handler registered for input.")
 )
 
 // shellError is an interractive shell error
@@ -28,7 +28,7 @@ func (s shellError) Error() string {
 func WarnErr(err string) error {
 	return shellError{
 		err:   err,
-		level: levelWarn,
+		level: warnLevel,
 	}
 }
 
@@ -36,7 +36,7 @@ func WarnErr(err string) error {
 func StopErr(err string) error {
 	return shellError{
 		err:   err,
-		level: levelStop,
+		level: stopLevel,
 	}
 }
 
@@ -44,7 +44,7 @@ func StopErr(err string) error {
 func ExitErr(err string) error {
 	return shellError{
 		err:   err,
-		level: levelExit,
+		level: exitLevel,
 	}
 }
 
@@ -52,6 +52,6 @@ func ExitErr(err string) error {
 func PanicErr(err string) error {
 	return shellError{
 		err:   err,
-		level: levelPanic,
+		level: panicLevel,
 	}
 }

@@ -23,17 +23,19 @@ const (
 	defaultNextPrompt = "... "
 )
 
+// Shell is an interactive cli shell.
 type Shell struct {
-	functions   map[string]CmdFunc
-	generic     CmdFunc
-	interrupt   CmdFunc
-	reader      *shellReader
-	writer      io.Writer
-	active      bool
-	activeMutex sync.RWMutex
-	ignoreCase  bool
-	haltChan    chan struct{}
-	historyFile string
+	functions      map[string]CmdFunc
+	generic        CmdFunc
+	interrupt      CmdFunc
+	interruptCount int
+	reader         *shellReader
+	writer         io.Writer
+	active         bool
+	activeMutex    sync.RWMutex
+	ignoreCase     bool
+	haltChan       chan struct{}
+	historyFile    string
 }
 
 // New creates a new shell with default settings. Uses standard output and default prompt ">> ".
@@ -45,7 +47,6 @@ func New() *Shell {
 	}
 	shell := &Shell{
 		functions: make(map[string]CmdFunc),
-		interrupt: interruptFunc,
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
@@ -102,7 +103,7 @@ shell:
 			err = handleInterrupt(s, line)
 		} else {
 			// reset interrupt counter
-			interruptCount = 0
+			s.interruptCount = 0
 
 			// normal flow
 			if len(line) == 0 {
@@ -114,16 +115,16 @@ shell:
 		}
 		if err1, ok := err.(shellError); ok && err != nil {
 			switch err1.level {
-			case levelWarn:
+			case warnLevel:
 				s.Println("Warning:", err)
 				continue shell
-			case levelStop:
+			case stopLevel:
 				s.Println(err)
 				break shell
-			case levelExit:
+			case exitLevel:
 				s.Println(err)
 				os.Exit(1)
-			case levelPanic:
+			case panicLevel:
 				panic(err)
 			}
 		} else if !ok && err != nil {
@@ -147,7 +148,7 @@ func handleInput(s *Shell, line []string) error {
 
 	// Generic handler
 	if s.generic == nil {
-		return errNoHandler
+		return noHandlerErr
 	}
 	output, err := s.generic(line...)
 	if err != nil {
