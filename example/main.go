@@ -13,45 +13,42 @@ func main() {
 	shell.Println("Sample Interactive Shell")
 
 	// handle login
-	shell.Register("login", func(args ...string) (string, error) {
-		doLogin(shell)
-		return "", nil
-	})
+	shell.Register("login", doLogin)
 
 	// handle "greet".
-	shell.Register("greet", func(args ...string) (string, error) {
+	shell.Register("greet", func(c *ishell.Context) {
 		name := "Stranger"
-		if len(args) > 0 {
-			name = strings.Join(args, " ")
+		if len(c.Args) > 0 {
+			name = strings.Join(c.Args, " ")
 		}
-		return "Hello " + name, nil
+		c.Println("Hello", name)
 	})
 
 	// read multiple lines with "multi" command
-	shell.Register("multi", func(args ...string) (string, error) {
-		shell.Println("Input multiple lines and end with semicolon ';'.")
-		lines := shell.ReadMultiLines(";")
-		shell.Println("Done reading. You wrote:")
-		return lines, nil
+	shell.Register("multi", func(c *ishell.Context) {
+		c.Println("Input multiple lines and end with semicolon ';'.")
+		lines := c.ReadMultiLines(";")
+		c.Println("Done reading. You wrote:")
+		c.Println(lines)
 	})
 
 	// start shell
 	shell.Start()
 }
 
-func doLogin(shell *ishell.Shell) {
-	shell.ShowPrompt(false)
-	defer shell.ShowPrompt(true)
+func doLogin(c *ishell.Context) {
+	c.ShowPrompt(false)
+	defer c.ShowPrompt(true)
 
-	shell.Println("Let's simulate login")
+	c.Println("Let's simulate login")
 
 	// prompt for input
-	shell.Print("Username: ")
-	username := shell.ReadLine()
-	shell.Print("Password: ")
-	password := shell.ReadPassword()
+	c.Print("Username: ")
+	username := c.ReadLine()
+	c.Print("Password: ")
+	password := c.ReadPassword()
 
 	// do something with username and password
-	shell.Println("Your inputs were", username, "and", password+".")
+	c.Println("Your inputs were", username, "and", password+".")
 
 }

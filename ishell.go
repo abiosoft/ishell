@@ -8,9 +8,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/exec"
-	"runtime"
-	"sort"
 	"strings"
 	"sync"
 
@@ -23,11 +20,16 @@ const (
 	defaultNextPrompt = "... "
 )
 
+var (
+	errNoHandler          = errors.New("no handler registered for input")
+	errNoInterruptHandler = errors.New("No interrupt handler")
+)
+
 // Shell is an interactive cli shell.
 type Shell struct {
-	functions      map[string]CmdFunc
-	generic        CmdFunc
-	interrupt      CmdFunc
+	functions      map[string]Func
+	generic        Func
+	interrupt      Func
 	interruptCount int
 	reader         *shellReader
 	writer         io.Writer
@@ -36,6 +38,8 @@ type Shell struct {
 	ignoreCase     bool
 	haltChan       chan struct{}
 	historyFile    string
+	contextValues  map[string]interface{}
+	Actions
 }
 
 // New creates a new shell with default settings. Uses standard output and default prompt ">> ".
@@ -46,18 +50,19 @@ func New() *Shell {
 		log.Fatal(err)
 	}
 	shell := &Shell{
-		functions: make(map[string]CmdFunc),
+		functions: make(map[string]Func),
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
 			multiPrompt: defaultNextPrompt,
 			showPrompt:  true,
-			buf:         bytes.NewBuffer(nil),
+			buf:         &bytes.Buffer{},
 			completer:   readline.NewPrefixCompleter(),
 		},
 		writer:   os.Stdout,
 		haltChan: make(chan struct{}),
 	}
+	shell.Actions = &shellActionsImpl{Shell: shell}
 	addDefaultFuncs(shell)
 	return shell
 }
@@ -113,21 +118,7 @@ shell:
 
 			err = handleInput(s, line)
 		}
-		if err1, ok := err.(shellError); ok && err != nil {
-			switch err1.level {
-			case warnLevel:
-				s.Println("Warning:", err)
-				continue shell
-			case stopLevel:
-				s.Println(err)
-				break shell
-			case exitLevel:
-				s.Println(err)
-				os.Exit(1)
-			case panicLevel:
-				panic(err)
-			}
-		} else if !ok && err != nil {
+		if err != nil {
 			s.Println("Error:", err)
 		}
 	}
@@ -148,27 +139,20 @@ func handleInput(s *Shell, line []string) error {
 
 	// Generic handler
 	if s.generic == nil {
-		return noHandlerErr
+		return errNoHandler
 	}
-	output, err := s.generic(line...)
-	if err != nil {
-		return err
-	}
-	if output != "" {
-		s.Println(output)
-	}
-	return nil
+	c := newContext(s, line)
+	s.generic(c)
+	return c.err
 }
 
 func handleInterrupt(s *Shell, line []string) error {
 	if s.interrupt == nil {
-		return errors.New("No interrupt handler")
+		return errNoInterruptHandler
 	}
-	output, err := s.interrupt(line...)
-	if output != "" {
-		s.Println(output)
-	}
-	return err
+	c := newContext(s, line)
+	s.interrupt(c)
+	return c.err
 }
 
 func (s *Shell) handleCommand(str []string) (bool, error) {
@@ -179,36 +163,9 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 	if _, ok := s.functions[cmd]; !ok {
 		return false, nil
 	}
-	output, err := s.functions[cmd](str[1:]...)
-	if err != nil {
-		return true, err
-	}
-	if output != "" {
-		s.Println(output)
-	}
-	return true, nil
-}
-
-// Stop stops the shell. This will stop the shell from auto reading inputs and calling
-// registered functions. A stopped shell is only inactive but totally functional.
-// Its functions can still be called.
-func (s *Shell) Stop() {
-	s.reader.scanner.Close()
-	if !s.Active() {
-		return
-	}
-	s.activeMutex.Lock()
-	s.active = false
-	s.activeMutex.Unlock()
-	go func() {
-		s.haltChan <- struct{}{}
-	}()
-}
-
-// ReadLine reads a line from standard input.
-func (s *Shell) ReadLine() string {
-	line, _ := s.readLine()
-	return line
+	c := newContext(s, str[1:])
+	s.functions[cmd](c)
+	return true, c.err
 }
 
 func (s *Shell) readLine() (line string, err error) {
@@ -260,13 +217,6 @@ func (s *Shell) read() ([]string, error) {
 	return args, err
 }
 
-// ReadMultiLinesFunc reads multiple lines from standard input. It passes each read line to
-// f and stops reading when f returns false.
-func (s *Shell) ReadMultiLinesFunc(f func(string) bool) string {
-	lines, _ := s.readMultiLinesFunc(f)
-	return lines
-}
-
 func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 	lines := bytes.NewBufferString("")
 	currentLine := 0
@@ -293,39 +243,8 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 	return lines.String(), err
 }
 
-// ReadMultiLines reads multiple lines from standard input. It stops reading when terminator
-// is encountered at the end of the line. It returns the lines read including terminator.
-// For more control, use ReadMultiLinesFunc.
-func (s *Shell) ReadMultiLines(terminator string) string {
-	return s.ReadMultiLinesFunc(func(line string) bool {
-		if strings.HasSuffix(strings.TrimSpace(line), terminator) {
-			return false
-		}
-		return true
-	})
-}
-
-// ReadPassword reads password from standard input without echoing the characters.
-// Note that this only works as expected when the standard input is a terminal.
-func (s *Shell) ReadPassword() string {
-	return s.reader.readPassword()
-}
-
-// Println prints to output and ends with newline character.
-func (s *Shell) Println(val ...interface{}) {
-	s.reader.buf.Truncate(0)
-	fmt.Fprintln(s.writer, val...)
-}
-
-// Print prints to output.
-func (s *Shell) Print(val ...interface{}) {
-	s.reader.buf.Truncate(0)
-	fmt.Fprint(s.reader.buf, val...)
-	fmt.Fprint(s.writer, val...)
-}
-
 // Register registers a function for command. It overwrites existing function, if any.
-func (s *Shell) Register(command string, function CmdFunc) {
+func (s *Shell) Register(command string, function Func) {
 	s.functions[command] = function
 
 	// readline library does not provide a better way
@@ -348,8 +267,8 @@ func (s *Shell) Register(command string, function CmdFunc) {
 	}
 }
 
-// Unregister unregisters a function for a command
-func (s *Shell) Unregister(command string) {
+// Deregister deregisters a function for a command
+func (s *Shell) Deregister(command string) {
 	delete(s.functions, command)
 }
 
@@ -357,32 +276,13 @@ func (s *Shell) Unregister(command string) {
 // It is called if the shell input could not be handled by any of the
 // registered functions. Unlike Register, the entire line is passed as
 // first argument to CmdFunc.
-func (s *Shell) RegisterGeneric(function CmdFunc) {
+func (s *Shell) RegisterGeneric(function Func) {
 	s.generic = function
 }
 
 // RegisterInterrupt registers a function to handle keyboard interrupt.
-func (s *Shell) RegisterInterrupt(function CmdFunc) {
+func (s *Shell) RegisterInterrupt(function Func) {
 	s.interrupt = function
-}
-
-// SetPrompt sets the prompt string. The string to be displayed before the cursor.
-func (s *Shell) SetPrompt(prompt string) {
-	s.reader.prompt = prompt
-	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
-}
-
-// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before
-// the cursor; starting from the second line of input.
-func (s *Shell) SetMultiPrompt(prompt string) {
-	s.reader.multiPrompt = prompt
-}
-
-// ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
-// Defaults to true.
-func (s *Shell) ShowPrompt(show bool) {
-	s.reader.showPrompt = show
-	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
 }
 
 // SetHistoryPath sets where readlines history file location. Use an empty
@@ -413,25 +313,6 @@ func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
 }
 
-// PrintCommands prints a space separated list of registered commands to the shell.
-func (s *Shell) PrintCommands() {
-	out := strings.Join(s.Commands(), " ")
-	if out != "" {
-		s.Println("Commands:")
-		s.Println(out)
-	}
-}
-
-// Commands returns a sorted list of all registered commands.
-func (s *Shell) Commands() []string {
-	var commands []string
-	for command := range s.functions {
-		commands = append(commands, command)
-	}
-	sort.Strings(commands)
-	return commands
-}
-
 // IgnoreCase specifies whether commands should not be case sensitive.
 // Defaults to false i.e. commands are case sensitive.
 // If true, commands must be registered in lower cases. e.g. shell.Register("cmd", ...)
@@ -439,16 +320,10 @@ func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
 }
 
-// ClearScreen clears the screen. Same behaviour as running 'clear' in unix terminal or 'cls' in windows cmd.
-func (s *Shell) ClearScreen() error {
-	return clearScreen(s)
-}
-
-func clearScreen(s *Shell) error {
-	cmd := exec.Command("clear")
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", "cls")
+func newContext(s *Shell, args []string) *Context {
+	return &Context{
+		Actions: s.Actions,
+		values:  s.contextValues,
+		Args:    args,
 	}
-	cmd.Stdout = s.writer
-	return cmd.Run()
 }

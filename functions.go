@@ -1,44 +1,41 @@
 package ishell
 
-// CmdFunc represents a command function that is called after an input to the shell.
-// The shell input is split into command and arguments like cli args and the arguments
-// are passed to this function. The shell will print output if output != "".
-type CmdFunc func(args ...string) (output string, err error)
+import (
+	"os"
+)
 
-func exitFunc(s *Shell) CmdFunc {
-	return func(args ...string) (string, error) {
-		s.Stop()
-		return "", nil
-	}
+// Func represents a command function that is called after an input to the shell.
+type Func func(c *Context)
+
+func exitFunc(c *Context) {
+	c.Stop()
 }
 
-func helpFunc(s *Shell) CmdFunc {
-	return func(args ...string) (string, error) {
-		s.PrintCommands()
-		return "", nil
-	}
+func helpFunc(c *Context) {
+	c.PrintCommands()
 }
 
-func clearFunc(s *Shell) CmdFunc {
-	return func(args ...string) (string, error) {
-		err := s.ClearScreen()
-		return "", err
+func clearFunc(c *Context) {
+	err := c.ClearScreen()
+	if err != nil {
+		c.Err(err)
 	}
 }
 
 func addDefaultFuncs(s *Shell) {
-	s.Register("exit", exitFunc(s))
-	s.Register("help", helpFunc(s))
-	s.Register("clear", clearFunc(s))
+	s.Register("exit", exitFunc)
+	s.Register("help", helpFunc)
+	s.Register("clear", clearFunc)
 	s.RegisterInterrupt(interruptFunc(s))
 }
 
-func interruptFunc(s *Shell) CmdFunc {
-	return func(args ...string) (string, error) {
+func interruptFunc(s *Shell) Func {
+	return func(c *Context) {
 		s.interruptCount++
 		if s.interruptCount >= 2 {
-			return "", ExitErr("Interrupted")
+			c.Println("Interrupted")
+			os.Exit(1)
 		}
-		return "Input Ctrl-C once more to exit", nil
+		c.Println("Input Ctrl-C once more to exit")
 	}
 }
