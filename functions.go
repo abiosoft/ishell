@@ -12,7 +12,7 @@ func exitFunc(c *Context) {
 }
 
 func helpFunc(c *Context) {
-	c.PrintCommands()
+	c.PrintHelp()
 }
 
 func clearFunc(c *Context) {
@@ -23,10 +23,22 @@ func clearFunc(c *Context) {
 }
 
 func addDefaultFuncs(s *Shell) {
-	s.Register("exit", exitFunc)
-	s.Register("help", helpFunc)
-	s.Register("clear", clearFunc)
-	s.RegisterInterrupt(interruptFunc(s))
+	s.AddCmd(&Cmd{
+		Name: "exit",
+		Help: "exit the program",
+		Func: exitFunc,
+	})
+	s.AddCmd(&Cmd{
+		Name: "help",
+		Help: "display help",
+		Func: helpFunc,
+	})
+	s.AddCmd(&Cmd{
+		Name: "clear",
+		Help: "clear the screen",
+		Func: clearFunc,
+	})
+	s.Interrupt(interruptFunc(s))
 }
 
 func interruptFunc(s *Shell) Func {

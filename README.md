@@ -24,12 +24,16 @@ func main(){
 	shell.Println("Sample Interactive Shell")
 
 	// register a function for "greet" command.
-    shell.Register("greet", func(args ...string) (string, error) {
-        name := "Stranger"
-        if len(args) > 0 {
-            name = strings.Join(args, " ")
-        }
-		return "Hello "+name, nil
+    shell.AddCmd(&ishell.Cmd{
+		Name: "greet",
+		Help: "greet user",
+		Func: func(c *ishell.Context) {
+			name := "Stranger"
+			if len(c.Args) > 0 {
+				name = strings.Join(c.Args, " ")
+			}
+			c.Println("Hello", name)
+		},
 	})
 
 	// start shell
@@ -51,22 +55,26 @@ $
 ### Reading input.
 ```go
 // simulate an authentication
-shell.Register("login", func(args ...string) (string, error) {
-	// disable the '>>>' for cleaner same line input.
-	shell.ShowPrompt(false)
-	defer shell.ShowPrompt(true) // yes, revert after login.
+shell.AddCmd(&ishell.Cmd{
+	Name: "login",
+	Help: "simulate a login",
+	Func: func(c *ishell.Context) {
+		// disable the '>>>' for cleaner same line input.
+		c.ShowPrompt(false)
+		defer c.ShowPrompt(true) // yes, revert after login.
 
-    // get username
-	shell.Print("Username: ")
-	username := shell.ReadLine()
+		 // get username
+		c.Print("Username: ")
+		username := c.ReadLine()
 
-    // get password.
-	shell.Print("Password: ")
-	password := shell.ReadPassword()
+		// get password.
+		c.Print("Password: ")
+		password := c.ReadPassword()
 
-	... // do something with username and password
+		... // do something with username and password
 
-    return "Authentication Successful.", nil
+		c.Println("Authentication Successful.")
+	},
 })
 ```
 Execution
@@ -90,13 +98,15 @@ Builtin support for multiple lines.
 ```
 User defined
 ```go
-shell.Register("multi", func(args ...string) (string, error) {
-	shell.Println("Input some lines:")
-	// read until a semicolon ';' is found
-	// use shell.ReadMultiLinesFunc for more control.
-	lines := shell.ReadMultiLines(";")
-	shell.Println("You wrote:")
-	return lines, nil
+shell.AddCmd(&ishell.Cmd{
+	Name: "multi",
+	Help: "input in multiple lines",
+	Func: func(c *ishell.Context) {
+		c.Println("Input multiple lines and end with semicolon ';'.")
+		lines := c.ReadMultiLines(";")
+		c.Println("Done reading. You wrote:")
+		c.Println(lines)
+	},
 })
 ```
 Execution
@@ -120,7 +130,7 @@ exit status 1
 ```
 Custom
 ```go
-shell.RegisterInterrupt(func(args ...string) (string, error) { ... })
+shell.Interrupt(func(c *ishell.Context) { ... })
 ```
 
 ### Durable history.
@@ -144,7 +154,7 @@ ishell is in active development and can still change significantly.
 * [x] Command history.
 * [x] Tab completion.
 * [x] Handle ^C interrupts.
-* [ ] Subcommands and help texts.
+* [x] Subcommands and help texts [partially done].
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
 

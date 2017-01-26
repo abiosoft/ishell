@@ -28,6 +28,7 @@ var (
 // Shell is an interactive cli shell.
 type Shell struct {
 	functions      map[string]Func
+	rootCmd        *Cmd
 	generic        Func
 	interrupt      Func
 	interruptCount int
@@ -50,6 +51,7 @@ func New() *Shell {
 		log.Fatal(err)
 	}
 	shell := &Shell{
+		rootCmd:   &Cmd{},
 		functions: make(map[string]Func),
 		reader: &shellReader{
 			scanner:     rl,
@@ -77,6 +79,7 @@ func (s *Shell) start() {
 	if s.Active() {
 		return
 	}
+	s.initCompleters()
 	s.activeMutex.Lock()
 	s.active = true
 	s.activeMutex.Unlock()
@@ -156,15 +159,17 @@ func handleInterrupt(s *Shell, line []string) error {
 }
 
 func (s *Shell) handleCommand(str []string) (bool, error) {
-	cmd := str[0]
 	if s.ignoreCase {
-		cmd = strings.ToLower(cmd)
+		for i := range str {
+			str[i] = strings.ToLower(str[i])
+		}
 	}
-	if _, ok := s.functions[cmd]; !ok {
+	f, args := s.rootCmd.findFunc(str)
+	if f == nil {
 		return false, nil
 	}
-	c := newContext(s, str[1:])
-	s.functions[cmd](c)
+	c := newContext(s, args)
+	f(c)
 	return true, c.err
 }
 
@@ -243,46 +248,56 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 	return lines.String(), err
 }
 
-// Register registers a function for command. It overwrites existing function, if any.
-func (s *Shell) Register(command string, function Func) {
-	s.functions[command] = function
-
-	// readline library does not provide a better way
-	// yet than to regenerate the AutoComplete
-	// TODO modify when available
-	var pcItems []readline.PrefixCompleterInterface
-	for word := range s.functions {
-		pcItems = append(pcItems, readline.PcItem(word))
-	}
-
+func (s *Shell) initCompleters() error {
 	var err error
 	// close current scanner and rebuild it with
 	// command in autocomplete
 	s.reader.scanner.Close()
 	config := s.reader.scanner.Config
-	config.AutoComplete = readline.NewPrefixCompleter(pcItems...)
+	config.AutoComplete = addCompleters(s.rootCmd, nil)
 	s.reader.scanner, err = readline.NewEx(config)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return nil
 }
 
-// Deregister deregisters a function for a command
-func (s *Shell) Deregister(command string) {
-	delete(s.functions, command)
+func addCompleters(root *Cmd, parent readline.PrefixCompleterInterface) readline.AutoCompleter {
+	var pcItems []readline.PrefixCompleterInterface
+	for _, cmd := range root.children {
+		pcItem := readline.PcItem(cmd.Name)
+		addCompleters(cmd, pcItem)
+		pcItems = append(pcItems, pcItem)
+	}
+	// base recursion
+	if parent == nil {
+		parent = readline.NewPrefixCompleter(pcItems...)
+	}
+	parent.SetChildren(pcItems)
+	return parent
 }
 
-// RegisterGeneric registers a generic function for all inputs.
+// AddCmd adds a new command handler.
+// This only adds top level commands.
+func (s *Shell) AddCmd(cmd *Cmd) {
+	s.rootCmd.AddCmd(cmd)
+}
+
+// DeleteCmd deletes a top level command.
+func (s *Shell) DeleteCmd(name string) {
+	s.rootCmd.DeleteCmd(name)
+}
+
+// NotFound adds a generic function for all inputs.
 // It is called if the shell input could not be handled by any of the
-// registered functions. Unlike Register, the entire line is passed as
-// first argument to CmdFunc.
-func (s *Shell) RegisterGeneric(function Func) {
-	s.generic = function
+// added commands.
+func (s *Shell) NotFound(f Func) {
+	s.generic = f
 }
 
-// RegisterInterrupt registers a function to handle keyboard interrupt.
-func (s *Shell) RegisterInterrupt(function Func) {
-	s.interrupt = function
+// Interrupt adds a function to handle keyboard interrupt (Ctrl-c).
+func (s *Shell) Interrupt(f Func) {
+	s.interrupt = f
 }
 
 // SetHistoryPath sets where readlines history file location. Use an empty

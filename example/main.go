@@ -13,24 +13,59 @@ func main() {
 	shell.Println("Sample Interactive Shell")
 
 	// handle login
-	shell.Register("login", doLogin)
+	shell.AddCmd(&ishell.Cmd{
+		Name: "login",
+		Func: doLogin,
+		Help: "simulate a login",
+	})
 
 	// handle "greet".
-	shell.Register("greet", func(c *ishell.Context) {
-		name := "Stranger"
-		if len(c.Args) > 0 {
-			name = strings.Join(c.Args, " ")
-		}
-		c.Println("Hello", name)
+	shell.AddCmd(&ishell.Cmd{
+		Name: "greet",
+		Help: "greet user",
+		Func: func(c *ishell.Context) {
+			name := "Stranger"
+			if len(c.Args) > 0 {
+				name = strings.Join(c.Args, " ")
+			}
+			c.Println("Hello", name)
+		},
 	})
 
 	// read multiple lines with "multi" command
-	shell.Register("multi", func(c *ishell.Context) {
-		c.Println("Input multiple lines and end with semicolon ';'.")
-		lines := c.ReadMultiLines(";")
-		c.Println("Done reading. You wrote:")
-		c.Println(lines)
+	shell.AddCmd(&ishell.Cmd{
+		Name: "multi",
+		Help: "input in multiple lines",
+		Func: func(c *ishell.Context) {
+			c.Println("Input multiple lines and end with semicolon ';'.")
+			lines := c.ReadMultiLines(";")
+			c.Println("Done reading. You wrote:")
+			c.Println(lines)
+		},
 	})
+
+	cmd := &ishell.Cmd{
+		Name: "test",
+		Help: "test subcommand",
+		Func: func(c *ishell.Context) {
+			c.Println("parent command works if Func is not nil. Has args", c.Args)
+		},
+	}
+	cmd.AddCmd(&ishell.Cmd{
+		Name: "sub1",
+		Help: "test sub 1",
+		Func: func(c *ishell.Context) {
+			c.Println("this is sub1 with args", c.Args)
+		},
+	})
+	cmd.AddCmd(&ishell.Cmd{
+		Name: "sub2",
+		Help: "test sub 2",
+		Func: func(c *ishell.Context) {
+			c.Println("this is sub2 with args", c.Args)
+		},
+	})
+	shell.AddCmd(cmd)
 
 	// start shell
 	shell.Start()

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
-	"sort"
 	"strings"
 )
 
@@ -36,10 +35,10 @@ type Actions interface {
 	// ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
 	// Defaults to true.
 	ShowPrompt(show bool)
-	// PrintCommands prints a space separated list of registered commands to the shell.
-	PrintCommands()
-	// Commands returns a sorted list of all registered commands.
-	Commands() []string
+	// Cmds returns all the commands added to the shell.
+	Cmds() []*Cmd
+	// Help displays the helps for the top level commands.
+	PrintHelp()
 	// ClearScreen clears the screen. Same behaviour as running 'clear' in unix terminal or 'cls' in windows cmd.
 	ClearScreen() error
 	// Stop stops the shell. This will stop the shell from auto reading inputs and calling
@@ -107,21 +106,12 @@ func (s *shellActionsImpl) ShowPrompt(show bool) {
 	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
 }
 
-func (s *shellActionsImpl) PrintCommands() {
-	out := strings.Join(s.Commands(), " ")
-	if out != "" {
-		s.Println("Commands:")
-		s.Println(out)
+func (s *shellActionsImpl) Cmds() []*Cmd {
+	var cmds []*Cmd
+	for _, cmd := range s.rootCmd.children {
+		cmds = append(cmds, cmd)
 	}
-}
-
-func (s *shellActionsImpl) Commands() []string {
-	var commands []string
-	for command := range s.functions {
-		commands = append(commands, command)
-	}
-	sort.Strings(commands)
-	return commands
+	return cmds
 }
 
 func (s *shellActionsImpl) ClearScreen() error {
@@ -139,6 +129,10 @@ func (s *shellActionsImpl) Stop() {
 	go func() {
 		s.haltChan <- struct{}{}
 	}()
+}
+
+func (s *shellActionsImpl) PrintHelp() {
+	s.rootCmd.PrintHelp()
 }
 
 func clearScreen(s *Shell) error {
