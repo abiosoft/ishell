@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -269,7 +270,7 @@ func addCompleters(root *Cmd, parent readline.PrefixCompleterInterface) readline
 		addCompleters(cmd, pcItem)
 		pcItems = append(pcItems, pcItem)
 	}
-	// base recursion
+	// recursion base
 	if parent == nil {
 		parent = readline.NewPrefixCompleter(pcItems...)
 	}
@@ -319,7 +320,7 @@ func (s *Shell) SetHistoryPath(path string) error {
 // $HOME prepended path.
 func (s *Shell) SetHomeHistoryPath(path string) {
 	home := os.Getenv("HOME")
-	abspath := fmt.Sprintf("%s/%s", home, path)
+	abspath := filepath.Join(home, path)
 	s.SetHistoryPath(abspath)
 }
 

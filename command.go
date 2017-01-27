@@ -19,7 +19,7 @@ func addHelpCmd(c *Cmd) {
 	c.AddCmd(&Cmd{
 		Name: "help",
 		Help: "displays help",
-		Func: func(_ *Context) {
+		Func: func(*Context) {
 			c.PrintHelp()
 		},
 	})
@@ -53,9 +53,10 @@ func (c *Cmd) Parent() *Cmd {
 
 // PrintHelp prints the help of the command.
 func (c Cmd) PrintHelp() {
+	fmt.Println("Commands:")
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
 	for _, child := range c.children {
-		fmt.Fprintf(w, "\t%s\t%s\n", child.Name, child.Help)
+		fmt.Fprintf(w, "\t%s\t\t\t%s\n", child.Name, child.Help)
 	}
 	w.Flush()
 }

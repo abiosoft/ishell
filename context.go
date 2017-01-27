@@ -4,6 +4,7 @@ package ishell
 type Context struct {
 	values map[string]interface{}
 	err    error
+
 	// Args is command arguments passed to shell.
 	Args []string
 	Actions

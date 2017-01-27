@@ -48,6 +48,6 @@ func interruptFunc(s *Shell) Func {
 			c.Println("Interrupted")
 			os.Exit(1)
 		}
-		c.Println("Input Ctrl-C once more to exit")
+		c.Println("Input Ctrl-c once more to exit")
 	}
 }
