@@ -44,8 +44,13 @@ Execution
 ```
 Sample Interactive Shell
 >>> help
+
 Commands:
-exit help greet
+  clear      clear the screen
+  greet      greet user
+  exit       exit the program
+  help       display help
+
 >>> greet Someone Somewhere
 Hello Someone Somewhere
 >>> exit
@@ -154,7 +159,7 @@ ishell is in active development and can still change significantly.
 * [x] Command history.
 * [x] Tab completion.
 * [x] Handle ^C interrupts.
-* [x] Subcommands and help texts [partially done].
+* [x] Subcommands and help texts.
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
 
