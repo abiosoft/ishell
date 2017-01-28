@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	defaultPrompt     = ">>> "
-	defaultNextPrompt = "... "
+	defaultPrompt      = ">>> "
+	defaultMultiPrompt = "... "
 )
 
 var (
@@ -28,19 +28,21 @@ var (
 
 // Shell is an interactive cli shell.
 type Shell struct {
-	functions      map[string]Func
-	rootCmd        *Cmd
-	generic        Func
-	interrupt      Func
-	interruptCount int
-	reader         *shellReader
-	writer         io.Writer
-	active         bool
-	activeMutex    sync.RWMutex
-	ignoreCase     bool
-	haltChan       chan struct{}
-	historyFile    string
-	contextValues  map[string]interface{}
+	functions       map[string]Func
+	rootCmd         *Cmd
+	generic         Func
+	interrupt       Func
+	interruptCount  int
+	reader          *shellReader
+	writer          io.Writer
+	active          bool
+	activeMutex     sync.RWMutex
+	ignoreCase      bool
+	customCompleter bool
+	haltChan        chan struct{}
+	historyFile     string
+	contextValues   map[string]interface{}
+	autoHelp        bool
 	Actions
 }
 
@@ -57,13 +59,14 @@ func New() *Shell {
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
-			multiPrompt: defaultNextPrompt,
+			multiPrompt: defaultMultiPrompt,
 			showPrompt:  true,
 			buf:         &bytes.Buffer{},
 			completer:   readline.NewPrefixCompleter(),
 		},
 		writer:   os.Stdout,
 		haltChan: make(chan struct{}),
+		autoHelp: true,
 	}
 	shell.Actions = &shellActionsImpl{Shell: shell}
 	addDefaultFuncs(shell)
@@ -80,7 +83,9 @@ func (s *Shell) start() {
 	if s.Active() {
 		return
 	}
-	s.initCompleters()
+	if !s.customCompleter {
+		s.initCompleters()
+	}
 	s.activeMutex.Lock()
 	s.active = true
 	s.activeMutex.Unlock()
@@ -145,7 +150,7 @@ func handleInput(s *Shell, line []string) error {
 	if s.generic == nil {
 		return errNoHandler
 	}
-	c := newContext(s, line)
+	c := newContext(s, nil, line)
 	s.generic(c)
 	return c.err
 }
@@ -154,7 +159,7 @@ func handleInterrupt(s *Shell, line []string) error {
 	if s.interrupt == nil {
 		return errNoInterruptHandler
 	}
-	c := newContext(s, line)
+	c := newContext(s, nil, line)
 	s.interrupt(c)
 	return c.err
 }
@@ -165,12 +170,17 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 			str[i] = strings.ToLower(str[i])
 		}
 	}
-	f, args := s.rootCmd.findFunc(str)
-	if f == nil {
+	cmd, args := s.rootCmd.FindCmd(str)
+	if cmd == nil {
 		return false, nil
 	}
-	c := newContext(s, args)
-	f(c)
+	// trigger help if auto help is true
+	if s.autoHelp && len(args) == 1 && args[0] == "help" {
+		s.Println(cmd.HelpText())
+		return true, nil
+	}
+	c := newContext(s, cmd, args)
+	cmd.Func(c)
 	return true, c.err
 }
 
@@ -250,17 +260,27 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 }
 
 func (s *Shell) initCompleters() error {
+	return s.setCompleter(addCompleters(s.rootCmd, nil))
+}
+
+func (s *Shell) setCompleter(completer readline.AutoCompleter) error {
 	var err error
 	// close current scanner and rebuild it with
 	// command in autocomplete
 	s.reader.scanner.Close()
 	config := s.reader.scanner.Config
-	config.AutoComplete = addCompleters(s.rootCmd, nil)
+	config.AutoComplete = completer
 	s.reader.scanner, err = readline.NewEx(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return nil
+}
+
+// CustomCompleter allows customization of autocomplete.
+func (s *Shell) CustomCompleter(completer func(string) []string) error {
+	s.customCompleter = true
+	return s.setCompleter(readline.PcItemDynamic(completer))
 }
 
 func addCompleters(root *Cmd, parent readline.PrefixCompleterInterface) readline.AutoCompleter {
@@ -294,6 +314,14 @@ func (s *Shell) DeleteCmd(name string) {
 // added commands.
 func (s *Shell) NotFound(f Func) {
 	s.generic = f
+}
+
+// AutoHelp sets if ishell should trigger help message if
+// a command's arg is "help". Defaults to true.
+// This can be set to false for more control on how help is
+// displayed.
+func (s *Shell) AutoHelp(enable bool) {
+	s.autoHelp = enable
 }
 
 // Interrupt adds a function to handle keyboard interrupt (Ctrl-c).
@@ -336,10 +364,14 @@ func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
 }
 
-func newContext(s *Shell, args []string) *Context {
+func newContext(s *Shell, cmd *Cmd, args []string) *Context {
+	if cmd == nil {
+		cmd = &Cmd{}
+	}
 	return &Context{
 		Actions: s.Actions,
 		values:  s.contextValues,
 		Args:    args,
+		Cmd:     *cmd,
 	}
 }

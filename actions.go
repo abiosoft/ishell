@@ -37,8 +37,8 @@ type Actions interface {
 	ShowPrompt(show bool)
 	// Cmds returns all the commands added to the shell.
 	Cmds() []*Cmd
-	// Help displays the helps for the top level commands.
-	PrintHelp()
+	// HelpText returns the computed help of top level commands.
+	HelpText() string
 	// ClearScreen clears the screen. Same behaviour as running 'clear' in unix terminal or 'cls' in windows cmd.
 	ClearScreen() error
 	// Stop stops the shell. This will stop the shell from auto reading inputs and calling
@@ -131,8 +131,8 @@ func (s *shellActionsImpl) Stop() {
 	}()
 }
 
-func (s *shellActionsImpl) PrintHelp() {
-	s.rootCmd.PrintHelp()
+func (s *shellActionsImpl) HelpText() string {
+	return s.rootCmd.HelpText()
 }
 
 func clearScreen(s *Shell) error {

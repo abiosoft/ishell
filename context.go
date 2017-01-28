@@ -1,12 +1,16 @@
 package ishell
 
-// Context is an ishell context. Context embeds ishell.Action.
+// Context is an ishell context. Context embeds ishell.Actions.
 type Context struct {
 	values map[string]interface{}
 	err    error
 
 	// Args is command arguments passed to shell.
 	Args []string
+
+	// Cmd is the currently executing command. This is empty for NotFound and Interrupt.
+	Cmd Cmd
+
 	Actions
 }
 
