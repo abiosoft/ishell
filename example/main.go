@@ -47,6 +47,10 @@ func main() {
 	cmd := &ishell.Cmd{
 		Name: "test",
 		Help: "test subcommand",
+		LongHelp: `Test subcommands
+
+This test how subcommand works using sub1 and sub2 subcommands.
+It also shows how long help is used, if set.`,
 		Func: func(c *ishell.Context) {
 			c.Println("parent command works if Func is not nil. Has args", c.Args)
 		},
