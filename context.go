@@ -5,7 +5,7 @@ type Context struct {
 	values map[string]interface{}
 	err    error
 
-	// Args is command arguments passed to shell.
+	// Args is command arguments.
 	Args []string
 
 	// Cmd is the currently executing command. This is empty for NotFound and Interrupt.
@@ -27,7 +27,7 @@ func (c *Context) Get(key string) interface{} {
 	return c.values[key]
 }
 
-// Set sets the key to value in this context.
+// Set sets the key in this context to value.
 func (c *Context) Set(key string, value interface{}) {
 	if c.values == nil {
 		c.values = make(map[string]interface{})

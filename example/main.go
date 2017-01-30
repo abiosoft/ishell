@@ -59,14 +59,14 @@ It also shows how long help is used, if set.`,
 		Name: "sub1",
 		Help: "test sub 1",
 		Func: func(c *ishell.Context) {
-			c.Println("this is sub1 with args", c.Args)
+			c.Println("this is sub command 1 with args", c.Args)
 		},
 	})
 	cmd.AddCmd(&ishell.Cmd{
 		Name: "sub2",
 		Help: "test sub 2",
 		Func: func(c *ishell.Context) {
-			c.Println("this is sub2 with args", c.Args)
+			c.Println("this is sub command 2 with args", c.Args)
 		},
 	})
 	shell.AddCmd(cmd)

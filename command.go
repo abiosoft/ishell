@@ -17,7 +17,7 @@ type Cmd struct {
 	// More descriptive help message for the command.
 	LongHelp string
 
-	// subcommands
+	// subcommands.
 	children map[string]*Cmd
 }
 

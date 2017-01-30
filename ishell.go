@@ -277,10 +277,10 @@ func (s *Shell) setCompleter(completer readline.AutoCompleter) error {
 	return nil
 }
 
-// CustomCompleter allows customization of autocomplete.
-func (s *Shell) CustomCompleter(completer func(string) []string) error {
+// CustomCompleter allows use of custom implementation of readline.Autocompleter
+func (s *Shell) CustomCompleter(completer readline.AutoCompleter) error {
 	s.customCompleter = true
-	return s.setCompleter(readline.PcItemDynamic(completer))
+	return s.setCompleter(completer)
 }
 
 func addCompleters(root *Cmd, parent readline.PrefixCompleterInterface) readline.AutoCompleter {
