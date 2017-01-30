@@ -4,9 +4,6 @@ import (
 	"os"
 )
 
-// Func represents a command function that is called after an input to the shell.
-type Func func(c *Context)
-
 func exitFunc(c *Context) {
 	c.Stop()
 }
@@ -41,7 +38,7 @@ func addDefaultFuncs(s *Shell) {
 	s.Interrupt(interruptFunc(s))
 }
 
-func interruptFunc(s *Shell) Func {
+func interruptFunc(s *Shell) func(*Context) {
 	return func(c *Context) {
 		s.interruptCount++
 		if s.interruptCount >= 2 {

@@ -18,10 +18,12 @@ type Cmd struct {
 	LongHelp string
 
 	// Completer is custom autocomplete for command.
+	// It takes in command arguments and returns
+	// autocomplete options.
 	// By default all commands get autocomplete of
 	// subcommands.
 	// A non-nil Completer overrides the default behaviour.
-	Completer func([]string) []string
+	Completer func(args []string) []string
 
 	// subcommands.
 	children map[string]*Cmd
@@ -41,8 +43,12 @@ func (c *Cmd) DeleteCmd(name string) {
 }
 
 // Children returns the subcommands of c.
-func (c *Cmd) Children() map[string]*Cmd {
-	return c.children
+func (c *Cmd) Children() []*Cmd {
+	var cmds []*Cmd
+	for _, cmd := range c.children {
+		cmds = append(cmds, cmd)
+	}
+	return cmds
 }
 
 func (c *Cmd) hasSubcommand() bool {
@@ -96,17 +102,4 @@ func (c Cmd) FindCmd(args []string) (*Cmd, []string) {
 		return cmd, args[i:]
 	}
 	return cmd, nil
-}
-
-// GetSubcommand gets the corresponding Cmd for subcommand in args.
-func (c Cmd) GetSubcommand(args []string) *Cmd {
-	for i, arg := range args {
-		if _, ok := c.children[arg]; !ok {
-			break
-		}
-		if i == len(args)-1 {
-			return c.children[arg]
-		}
-	}
-	return nil
 }

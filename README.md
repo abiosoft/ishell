@@ -157,12 +157,11 @@ go run example/main.go
 ishell is in active development and can still change significantly.
 
 ## Roadmap (in no particular order)
-* [x] Support multiline inputs.
+* [x] Multiline inputs.
 * [x] Command history.
-* [x] Tab completion.
+* [x] Customizable tab completion.
 * [x] Handle ^C interrupts.
 * [x] Subcommands and help texts.
-* [x] Custom autocomplete.
 * [x] Scrollable paged output.
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
@@ -179,3 +178,8 @@ Library | Use
 ------- | -----
 [github.com/flynn/go-shlex](http://github.com/flynn/go-shlex) | splitting input into command and args.
 [gopkg.in/readline.v1](http://gopkg.in/readline.v1) | history, tab completion and reading passwords.
+
+## Donate
+```
+bitcoin:1GTHYEDiy2C7RzXn5nY4wVRaEN2GvLjwZN
+```

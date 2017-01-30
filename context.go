@@ -1,6 +1,6 @@
 package ishell
 
-// Context is an ishell context. Context embeds ishell.Actions.
+// Context is an ishell context. It embeds ishell.Actions.
 type Context struct {
 	values map[string]interface{}
 	err    error

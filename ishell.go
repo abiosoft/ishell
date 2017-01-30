@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -28,10 +29,10 @@ var (
 
 // Shell is an interactive cli shell.
 type Shell struct {
-	functions       map[string]Func
+	functions       map[string]func(*Context)
 	rootCmd         *Cmd
-	generic         Func
-	interrupt       Func
+	generic         func(*Context)
+	interrupt       func(*Context)
 	interruptCount  int
 	reader          *shellReader
 	writer          io.Writer
@@ -55,7 +56,7 @@ func New() *Shell {
 	}
 	shell := &Shell{
 		rootCmd:   &Cmd{},
-		functions: make(map[string]Func),
+		functions: make(map[string]func(*Context)),
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
@@ -73,8 +74,8 @@ func New() *Shell {
 	return shell
 }
 
-// Start starts the shell. It reads inputs from standard input and calls registered functions
-// accordingly. This function blocks until the shell is stopped.
+// Start starts the shell. It reads inputs from standard input and calls associated command.
+// This function blocks until the shell is stopped.
 func (s *Shell) Start() {
 	s.start()
 }
@@ -296,12 +297,13 @@ func (s *Shell) DeleteCmd(name string) {
 // NotFound adds a generic function for all inputs.
 // It is called if the shell input could not be handled by any of the
 // added commands.
-func (s *Shell) NotFound(f Func) {
+func (s *Shell) NotFound(f func(*Context)) {
 	s.generic = f
 }
 
 // AutoHelp sets if ishell should trigger help message if
 // a command's arg is "help". Defaults to true.
+//
 // This can be set to false for more control on how help is
 // displayed.
 func (s *Shell) AutoHelp(enable bool) {
@@ -309,7 +311,7 @@ func (s *Shell) AutoHelp(enable bool) {
 }
 
 // Interrupt adds a function to handle keyboard interrupt (Ctrl-c).
-func (s *Shell) Interrupt(f Func) {
+func (s *Shell) Interrupt(f func(*Context)) {
 	s.interrupt = f
 }
 
@@ -328,10 +330,13 @@ func (s *Shell) SetHistoryPath(path string) error {
 	return err
 }
 
-// SetHomeHistoryPath is a convenience method that sets the history path with a
-// $HOME prepended path.
+// SetHomeHistoryPath is a convenience method that sets the history path
+// in user's home directory.
 func (s *Shell) SetHomeHistoryPath(path string) {
 	home := os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		home = os.Getenv("USERPROFILE")
+	}
 	abspath := filepath.Join(home, path)
 	s.SetHistoryPath(abspath)
 }
