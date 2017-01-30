@@ -22,8 +22,8 @@ const (
 )
 
 var (
-	errNoHandler          = errors.New("no handler registered for input")
-	errNoInterruptHandler = errors.New("No interrupt handler")
+	errNoHandler          = errors.New("incorrect input, try 'help'")
+	errNoInterruptHandler = errors.New("no interrupt handler")
 )
 
 // Shell is an interactive cli shell.
@@ -174,8 +174,8 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 	if cmd == nil {
 		return false, nil
 	}
-	// trigger help if auto help is true
-	if s.autoHelp && len(args) == 1 && args[0] == "help" {
+	// trigger help if func is not registered or auto help is true
+	if cmd.Func == nil || (s.autoHelp && len(args) == 1 && args[0] == "help") {
 		s.Println(cmd.HelpText())
 		return true, nil
 	}
@@ -259,11 +259,11 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 	return lines.String(), err
 }
 
-func (s *Shell) initCompleters() error {
-	return s.setCompleter(addCompleters(s.rootCmd, nil))
+func (s *Shell) initCompleters() {
+	s.setCompleter(iCompleter{s.rootCmd})
 }
 
-func (s *Shell) setCompleter(completer readline.AutoCompleter) error {
+func (s *Shell) setCompleter(completer readline.AutoCompleter) {
 	var err error
 	// close current scanner and rebuild it with
 	// command in autocomplete
@@ -274,28 +274,12 @@ func (s *Shell) setCompleter(completer readline.AutoCompleter) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil
 }
 
-// CustomCompleter allows use of custom implementation of readline.Autocompleter
-func (s *Shell) CustomCompleter(completer readline.AutoCompleter) error {
+// CustomCompleter allows use of custom implementation of readline.Autocompleter.
+func (s *Shell) CustomCompleter(completer readline.AutoCompleter) {
 	s.customCompleter = true
-	return s.setCompleter(completer)
-}
-
-func addCompleters(root *Cmd, parent readline.PrefixCompleterInterface) readline.AutoCompleter {
-	var pcItems []readline.PrefixCompleterInterface
-	for _, cmd := range root.children {
-		pcItem := readline.PcItem(cmd.Name)
-		addCompleters(cmd, pcItem)
-		pcItems = append(pcItems, pcItem)
-	}
-	// recursion base
-	if parent == nil {
-		parent = readline.NewPrefixCompleter(pcItems...)
-	}
-	parent.SetChildren(pcItems)
-	return parent
+	s.setCompleter(completer)
 }
 
 // AddCmd adds a new command handler.

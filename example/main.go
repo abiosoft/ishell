@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/abiosoft/ishell"
@@ -9,10 +10,10 @@ import (
 func main() {
 	shell := ishell.New()
 
-	// display info
+	// display info.
 	shell.Println("Sample Interactive Shell")
 
-	// handle login
+	// handle login.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "login",
 		Func: doLogin,
@@ -44,32 +45,47 @@ func main() {
 		},
 	})
 
-	cmd := &ishell.Cmd{
-		Name: "test",
-		Help: "test subcommand",
-		LongHelp: `Test subcommands
+	// subcommands and custom autocomplete.
+	{
+		var words []string
+		autoCmd := &ishell.Cmd{
+			Name: "suggest",
+			Help: "try auto complete",
+			LongHelp: `Try dynamic autocomplete by adding and removing words.
+Then view the autocomplete by tabbing after "words" subcommand.
 
-This test how subcommand works using sub1 and sub2 subcommands.
-It also shows how long help is used, if set.`,
-		Func: func(c *ishell.Context) {
-			c.Println("parent command works if Func is not nil. Has args", c.Args)
-		},
+This is an example of a long help.`,
+		}
+		autoCmd.AddCmd(&ishell.Cmd{
+			Name: "add",
+			Help: "add words to autocomplete",
+			Func: func(c *ishell.Context) {
+				if len(c.Args) == 0 {
+					c.Err(errors.New("missing word(s)"))
+					return
+				}
+				words = append(words, c.Args...)
+			},
+		})
+
+		autoCmd.AddCmd(&ishell.Cmd{
+			Name: "clear",
+			Help: "clear words in autocomplete",
+			Func: func(c *ishell.Context) {
+				words = nil
+			},
+		})
+
+		autoCmd.AddCmd(&ishell.Cmd{
+			Name: "words",
+			Help: "add words with 'suggest add', then tab after typing 'suggest words '",
+			Completer: func([]string) []string {
+				return words
+			},
+		})
+
+		shell.AddCmd(autoCmd)
 	}
-	cmd.AddCmd(&ishell.Cmd{
-		Name: "sub1",
-		Help: "test sub 1",
-		Func: func(c *ishell.Context) {
-			c.Println("this is sub command 1 with args", c.Args)
-		},
-	})
-	cmd.AddCmd(&ishell.Cmd{
-		Name: "sub2",
-		Help: "test sub 2",
-		Func: func(c *ishell.Context) {
-			c.Println("this is sub command 2 with args", c.Args)
-		},
-	})
-	shell.AddCmd(cmd)
 
 	// start shell
 	shell.Start()

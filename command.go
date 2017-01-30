@@ -17,6 +17,9 @@ type Cmd struct {
 	// More descriptive help message for the command.
 	LongHelp string
 
+	// Completer is custom autocomplete for command.
+	Completer func([]string) []string
+
 	// subcommands.
 	children map[string]*Cmd
 }

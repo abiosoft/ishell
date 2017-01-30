@@ -8,8 +8,10 @@ The current master is not backward compatible with older version. Kindly change 
 
 Older version of this library is still available at [https://gopkg.in/abiosoft/ishell.v1](https://gopkg.in/abiosoft/ishell.v1).
 
+However, you are advised to upgrade.
 
 ## Usage
+
 
 ```go
 import "strings"
@@ -28,11 +30,7 @@ func main(){
 		Name: "greet",
 		Help: "greet user",
 		Func: func(c *ishell.Context) {
-			name := "Stranger"
-			if len(c.Args) > 0 {
-				name = strings.Join(c.Args, " ")
-			}
-			c.Println("Hello", name)
+			c.Println("Hello", strings.Join(c.Args, " "))
 		},
 	})
 
@@ -144,12 +142,16 @@ shell.Interrupt(func(c *ishell.Context) { ... })
 shell.SetHomeHistoryPath(".ishell_history")
 ```
 
-Check example code for more.
+### Example 
+Available [here](https://github.com/abiosoft/ishell/blob/master/example/main.go).
+```sh
+go run example/main.go
+```
 
 ## Supported Platforms
 * [x] Linux
 * [x] OSX
-* [x] Windows
+* [x] Windows [Not tested but should work]
 
 ## Note
 ishell is in active development and can still change significantly.
@@ -160,6 +162,7 @@ ishell is in active development and can still change significantly.
 * [x] Tab completion.
 * [x] Handle ^C interrupts.
 * [x] Subcommands and help texts.
+* [x] Custom autocomplete.
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
 
