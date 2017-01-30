@@ -14,7 +14,7 @@ type Context struct {
 	Actions
 }
 
-// Err informs ishell that an error ocurred in the current
+// Err informs ishell that an error occurred in the current
 // function.
 func (c *Context) Err(err error) {
 	c.err = err
