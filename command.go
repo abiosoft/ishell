@@ -18,6 +18,9 @@ type Cmd struct {
 	LongHelp string
 
 	// Completer is custom autocomplete for command.
+	// By default all commands get autocomplete of
+	// subcommands.
+	// A non-nil Completer overrides the default behaviour.
 	Completer func([]string) []string
 
 	// subcommands.

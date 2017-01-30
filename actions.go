@@ -2,6 +2,8 @@ package ishell
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -27,6 +29,9 @@ type Actions interface {
 	Print(val ...interface{})
 	// Printf prints to output using string format.
 	Printf(format string, val ...interface{})
+	// ShowPaged shows a paged text that is scrollable.
+	// This leverages on "less" for unix and "more" for windows.
+	ShowPaged(text string) error
 	// SetPrompt sets the prompt string. The string to be displayed before the cursor.
 	SetPrompt(prompt string)
 	// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before
@@ -118,6 +123,10 @@ func (s *shellActionsImpl) ClearScreen() error {
 	return clearScreen(s.Shell)
 }
 
+func (s *shellActionsImpl) ShowPaged(text string) error {
+	return showPaged(s.Shell, text)
+}
+
 func (s *shellActionsImpl) Stop() {
 	s.reader.scanner.Close()
 	if !s.Active() {
@@ -136,10 +145,33 @@ func (s *shellActionsImpl) HelpText() string {
 }
 
 func clearScreen(s *Shell) error {
-	cmd := exec.Command("clear")
+	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd", "/C", "cls")
+	} else {
+		cmd = exec.Command("clear")
 	}
 	cmd.Stdout = s.writer
+	return cmd.Run()
+}
+
+func showPaged(s *Shell, text string) error {
+	f, err := ioutil.TempFile("", "ishell")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+	if _, err := f.WriteString(text); err != nil {
+		return err
+	}
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("more", f.Name())
+	} else {
+		cmd = exec.Command("less", f.Name())
+	}
+	cmd.Stdout = s.writer
+	cmd.Stderr = s.writer
+	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/abiosoft/ishell"
@@ -86,6 +87,22 @@ This is an example of a long help.`,
 
 		shell.AddCmd(autoCmd)
 	}
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "paged",
+		Help: "show paged text",
+		Func: func(c *ishell.Context) {
+			lines := ""
+			line := `%d. This is a paged text input.
+This is another line of it.
+
+`
+			for i := 0; i < 100; i++ {
+				lines += fmt.Sprintf(line, i+1)
+			}
+			c.ShowPaged(lines)
+		},
+	})
 
 	// start shell
 	shell.Start()

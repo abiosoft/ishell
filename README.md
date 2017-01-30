@@ -163,6 +163,7 @@ ishell is in active development and can still change significantly.
 * [x] Handle ^C interrupts.
 * [x] Subcommands and help texts.
 * [x] Custom autocomplete.
+* [x] Scrollable paged output.
 * [ ] Coloured outputs.
 * [ ] Testing, testing, testing.
 
