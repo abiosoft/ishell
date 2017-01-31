@@ -116,7 +116,7 @@ shell.AddCmd(&ishell.Cmd{
 Execution
 ```
 >>> multi
-Input some lines:
+Input multiple lines and end with semicolon ';'.
 >>> this is user defined 
 ... multiline input;
 You wrote:
