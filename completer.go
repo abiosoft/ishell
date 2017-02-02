@@ -23,6 +23,9 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 			suggestions = append(suggestions, []rune(strings.TrimPrefix(w, prefix)))
 		}
 	}
+	if len(suggestions) == 1 && prefix != "" && string(suggestions[0]) == "" {
+		suggestions = [][]rune{[]rune(" ")}
+	}
 	return suggestions, len(prefix)
 }
 
