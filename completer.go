@@ -1,13 +1,24 @@
 package ishell
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/flynn-archive/go-shlex"
+)
 
 type iCompleter struct {
 	cmd *Cmd
 }
 
 func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
-	words := strings.Fields(string(line))
+	var words []string
+	if w, err := shlex.Split(string(line)); err == nil {
+		words = w
+	} else {
+		// fall back
+		words = strings.Fields(string(line))
+	}
+
 	var cWords []string
 	prefix := ""
 	if len(words) > 0 && line[pos-1] != ' ' {

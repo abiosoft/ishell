@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/flynn/go-shlex"
+	"github.com/flynn-archive/go-shlex"
 	"gopkg.in/readline.v1"
 )
 
@@ -111,6 +111,7 @@ shell:
 			break
 		} else if err != nil && err != readline.ErrInterrupt {
 			s.Println("Error:", err)
+			continue
 		}
 
 		if err == readline.ErrInterrupt {
@@ -267,7 +268,7 @@ func (s *Shell) initCompleters() {
 func (s *Shell) setCompleter(completer readline.AutoCompleter) {
 	var err error
 	// close current scanner and rebuild it with
-	// command in autocomplete
+	// autocomplete
 	s.reader.scanner.Close()
 	config := s.reader.scanner.Config
 	config.AutoComplete = completer

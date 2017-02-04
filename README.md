@@ -177,7 +177,7 @@ MIT
 ## Credits
 Library | Use
 ------- | -----
-[github.com/flynn/go-shlex](http://github.com/flynn/go-shlex) | splitting input into command and args.
+[github.com/flynn-archive/go-shlex](http://github.com/flynn-archive/go-shlex) | splitting input into command and args.
 [gopkg.in/readline.v1](http://gopkg.in/readline.v1) | history, tab completion and reading passwords.
 
 ## Donate
