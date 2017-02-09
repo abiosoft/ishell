@@ -2,6 +2,7 @@ package ishell
 
 import (
 	"bytes"
+	"strings"
 	"sync"
 
 	"gopkg.in/readline.v1"
@@ -66,11 +67,15 @@ func (s *shellReader) readLine(consumer chan lineString) {
 
 	// detect if print is called to
 	// prevent readline lib from clearing line.
+	// use the last line as prompt.
 	// TODO find better way.
 	shellPrompt := s.prompt
 	prompt := s.rlPrompt()
 	if s.buf.Len() > 0 {
-		prompt += s.buf.String()
+		lines := strings.Split(s.buf.String(), "\n")
+		if p := lines[len(lines)-1]; strings.TrimSpace(p) != "" {
+			prompt = p
+		}
 		s.buf.Truncate(0)
 	}
 
