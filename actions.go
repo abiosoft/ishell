@@ -1,9 +1,8 @@
 package ishell
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -156,22 +155,14 @@ func clearScreen(s *Shell) error {
 }
 
 func showPaged(s *Shell, text string) error {
-	f, err := ioutil.TempFile("", "ishell")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(f.Name())
-	if _, err := f.WriteString(text); err != nil {
-		return err
-	}
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("more", f.Name())
+		cmd = exec.Command("more")
 	} else {
-		cmd = exec.Command("less", f.Name())
+		cmd = exec.Command("less")
 	}
 	cmd.Stdout = s.writer
 	cmd.Stderr = s.writer
-	cmd.Stdin = os.Stdin
+	cmd.Stdin = bytes.NewBufferString(text)
 	return cmd.Run()
 }
