@@ -4,8 +4,8 @@ ishell is an interactive shell library for creating interactive cli applications
 [![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/abiosoft/ishell)
 [![Go Report Card](https://goreportcard.com/badge/github.com/abiosoft/ishell)](https://goreportcard.com/report/github.com/abiosoft/ishell)
 
-## Older version 
-The current master is not backward compatible with older version. Kindly change your import path to `gopkg.in/abiosoft/ishell.v1`. 
+## Older version
+The current master is not backward compatible with older version. Kindly change your import path to `gopkg.in/abiosoft/ishell.v1`.
 
 Older version of this library is still available at [https://gopkg.in/abiosoft/ishell.v1](https://gopkg.in/abiosoft/ishell.v1).
 
@@ -97,7 +97,7 @@ Builtin support for multiple lines.
 
 >>> Cool that << EOF
 ... everything here goes
-... as a single argument. 
+... as a single argument.
 ... EOF
 ```
 User defined
@@ -117,7 +117,7 @@ Execution
 ```
 >>> multi
 Input multiple lines and end with semicolon ';'.
->>> this is user defined 
+>>> this is user defined
 ... multiline input;
 You wrote:
 this is user defined
@@ -143,7 +143,7 @@ shell.Interrupt(func(c *ishell.Context) { ... })
 shell.SetHomeHistoryPath(".ishell_history")
 ```
 
-### Example 
+### Example
 Available [here](https://github.com/abiosoft/ishell/blob/master/example/main.go).
 ```sh
 go run example/main.go
@@ -164,7 +164,7 @@ ishell is in active development and can still change significantly.
 * [x] Handle ^C interrupts.
 * [x] Subcommands and help texts.
 * [x] Scrollable paged output.
-* [ ] Coloured outputs.
+* [ ] Progress bar.
 * [ ] Testing, testing, testing.
 
 ## Contribution
