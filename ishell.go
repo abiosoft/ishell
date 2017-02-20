@@ -29,7 +29,6 @@ var (
 
 // Shell is an interactive cli shell.
 type Shell struct {
-	functions       map[string]func(*Context)
 	rootCmd         *Cmd
 	generic         func(*Context)
 	interrupt       func(*Context)
@@ -55,8 +54,7 @@ func New() *Shell {
 		log.Fatal(err)
 	}
 	shell := &Shell{
-		rootCmd:   &Cmd{},
-		functions: make(map[string]func(*Context)),
+		rootCmd: &Cmd{},
 		reader: &shellReader{
 			scanner:     rl,
 			prompt:      defaultPrompt,
