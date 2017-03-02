@@ -134,7 +134,7 @@ exit status 1
 ```
 Custom
 ```go
-shell.Interrupt(func(c *ishell.Context) { ... })
+shell.Interrupt(func(count int, c *ishell.Context) { ... })
 ```
 
 ### Durable history.

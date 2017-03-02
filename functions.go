@@ -38,10 +38,9 @@ func addDefaultFuncs(s *Shell) {
 	s.Interrupt(interruptFunc(s))
 }
 
-func interruptFunc(s *Shell) func(*Context) {
-	return func(c *Context) {
-		s.interruptCount++
-		if s.interruptCount >= 2 {
+func interruptFunc(s *Shell) func(int, *Context) {
+	return func(count int, c *Context) {
+		if count >= 2 {
 			c.Println("Interrupted")
 			os.Exit(1)
 		}
