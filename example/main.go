@@ -3,9 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/abiosoft/ishell"
+	"github.com/briandowns/spinner"
 )
 
 func main() {
@@ -31,6 +34,12 @@ func main() {
 				name = strings.Join(c.Args, " ")
 			}
 			c.Println("Hello", name)
+			s := spinner.New(spinner.CharSets[0], 100*time.Millisecond) // Build our new spinner
+			s.Suffix = "Some suffix"
+			s.Start() // Start the spinner
+
+			time.Sleep(4 * time.Second) // Run for some time to simulate work
+			s.Stop()
 		},
 	})
 
@@ -43,6 +52,18 @@ func main() {
 			lines := c.ReadMultiLines(";")
 			c.Println("Done reading. You wrote:")
 			c.Println(lines)
+			// clear := func() { c.Print("\033[2K") }
+			clear := func(n int) {
+				for i := 0; i < n; i++ {
+					c.Print("\b")
+				}
+			}
+			for i := 0; i < 100; i++ {
+				c.Print(i+1, "%")
+				time.Sleep(time.Millisecond * 100)
+				clear(len(strconv.Itoa(i+1)) + 1)
+			}
+			c.Println()
 		},
 	})
 
