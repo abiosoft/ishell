@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/abiosoft/ishell"
-	"github.com/briandowns/spinner"
 )
 
 func main() {
@@ -34,12 +33,17 @@ func main() {
 				name = strings.Join(c.Args, " ")
 			}
 			c.Println("Hello", name)
-			s := spinner.New(spinner.CharSets[0], 100*time.Millisecond) // Build our new spinner
-			s.Suffix = "Some suffix"
-			s.Start() // Start the spinner
 
-			time.Sleep(4 * time.Second) // Run for some time to simulate work
-			s.Stop()
+			c.ProgressBar().Start()
+			go func() {
+				for i := 0; i < 101; i++ {
+					c.ProgressBar().Progress(i)
+					c.ProgressBar().Suffix(fmt.Sprint("", i, "%"))
+					time.Sleep(time.Millisecond * 100)
+				}
+			}()
+			time.Sleep(13 * time.Second) // Run for some time to simulate work
+			c.ProgressBar().Stop()
 		},
 	})
 

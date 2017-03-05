@@ -43,6 +43,7 @@ type Shell struct {
 	historyFile     string
 	contextValues   map[string]interface{}
 	autoHelp        bool
+	progressBar     ProgressBar
 	Actions
 }
 
@@ -68,6 +69,7 @@ func New() *Shell {
 		autoHelp: true,
 	}
 	shell.Actions = &shellActionsImpl{Shell: shell}
+	shell.progressBar = newProgressBar(shell)
 	addDefaultFuncs(shell)
 	return shell
 }
