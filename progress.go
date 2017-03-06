@@ -118,18 +118,18 @@ func (p *progressBarImpl) write(s string) error {
 	return err
 }
 
-func (p progressBarImpl) erase(n int) {
+func (p *progressBarImpl) erase(n int) {
 	for i := 0; i < n; i++ {
 		p.writer.Write([]byte{'\b'})
 	}
 }
 
-func (p progressBarImpl) clear() {
+func (p *progressBarImpl) done() {
 	p.wMutex.Lock()
 	defer p.wMutex.Unlock()
 
 	p.erase(p.writtenLen)
-	fmt.Fprintln(p.writer)
+	fmt.Fprintln(p.writer, p.final)
 }
 
 func (p *progressBarImpl) output() string {
@@ -174,7 +174,7 @@ func (p *progressBarImpl) Start() {
 				p.refresh()
 			}
 		}
-		p.clear()
+		p.done()
 		close(p.wait)
 	}()
 }

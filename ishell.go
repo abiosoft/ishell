@@ -386,12 +386,23 @@ func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 	if cmd == nil {
 		cmd = &Cmd{}
 	}
-	progressBar := *(s.progressBar.(*progressBarImpl))
 	return &Context{
 		Actions:     s.Actions,
 		values:      s.contextValues,
-		progressBar: &progressBar,
+		progressBar: copyShellProgressBar(s),
 		Args:        args,
 		Cmd:         *cmd,
 	}
+}
+
+func copyShellProgressBar(s *Shell) ProgressBar {
+	sp := s.progressBar.(*progressBarImpl)
+	p := newProgressBar(s)
+	p.Indeterminate(sp.indeterminate)
+	p.Display(sp.display)
+	p.Prefix(sp.prefix)
+	p.Suffix(sp.suffix)
+	p.Final(sp.final)
+	p.Interval(sp.interval)
+	return p
 }

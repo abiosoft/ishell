@@ -154,6 +154,7 @@ Output
 ```
 [==========>         ] 50%
 ```
+
 Indeterminate
 ```go
 
