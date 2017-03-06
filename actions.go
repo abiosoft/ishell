@@ -49,8 +49,6 @@ type Actions interface {
 	// registered functions. A stopped shell is only inactive but totally functional.
 	// Its functions can still be called.
 	Stop()
-	// ProgressBar returns the progress bar for the shell.
-	ProgressBar() ProgressBar
 }
 
 type shellActionsImpl struct {
@@ -126,10 +124,6 @@ func (s *shellActionsImpl) ClearScreen() error {
 
 func (s *shellActionsImpl) ShowPaged(text string) error {
 	return showPaged(s.Shell, text)
-}
-
-func (s *shellActionsImpl) ProgressBar() ProgressBar {
-	return s.progressBar
 }
 
 func (s *shellActionsImpl) Stop() {

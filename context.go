@@ -2,8 +2,9 @@ package ishell
 
 // Context is an ishell context. It embeds ishell.Actions.
 type Context struct {
-	values map[string]interface{}
-	err    error
+	values      map[string]interface{}
+	progressBar ProgressBar
+	err         error
 
 	// Args is command arguments.
 	Args []string
@@ -38,4 +39,9 @@ func (c *Context) Set(key string, value interface{}) {
 // Del deletes key and its value in this context.
 func (c *Context) Del(key string) {
 	delete(c.values, key)
+}
+
+// ProgressBar returns the progress bar for the current shell context.
+func (c *Context) ProgressBar() ProgressBar {
+	return c.progressBar
 }

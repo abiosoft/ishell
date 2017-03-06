@@ -33,6 +33,7 @@ type Shell struct {
 	generic         func(*Context)
 	interrupt       func(int, *Context)
 	interruptCount  int
+	eof             func(*Context)
 	reader          *shellReader
 	writer          io.Writer
 	active          bool
@@ -106,9 +107,16 @@ shell:
 		case <-s.haltChan:
 			continue shell
 		}
+
 		if err == io.EOF {
-			fmt.Println("EOF")
-			break
+			if s.eof == nil {
+				fmt.Println("EOF")
+				break
+			}
+			if err := handleEOF(s); err != nil {
+				s.Println("Error:", err)
+				continue
+			}
 		} else if err != nil && err != readline.ErrInterrupt {
 			s.Println("Error:", err)
 			continue
@@ -164,6 +172,12 @@ func handleInterrupt(s *Shell, line []string) error {
 	c := newContext(s, nil, line)
 	s.interruptCount++
 	s.interrupt(s.interruptCount, c)
+	return c.err
+}
+
+func handleEOF(s *Shell) error {
+	c := newContext(s, nil, nil)
+	s.eof(c)
 	return c.err
 }
 
@@ -319,6 +333,12 @@ func (s *Shell) Interrupt(f func(count int, c *Context)) {
 	s.interrupt = f
 }
 
+// EOF adds a functon to handle End of File input (Ctrl-d).
+// This overrides the default behaviour which terminates the shell.
+func (s *Shell) EOF(f func(c *Context)) {
+	s.eof = f
+}
+
 // SetHistoryPath sets where readlines history file location. Use an empty
 // string to disable history file. It is empty by default.
 func (s *Shell) SetHistoryPath(path string) error {
@@ -357,14 +377,21 @@ func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
 }
 
+// ProgressBar returns the progress bar for the shell.
+func (s *Shell) ProgressBar() ProgressBar {
+	return s.progressBar
+}
+
 func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 	if cmd == nil {
 		cmd = &Cmd{}
 	}
+	progressBar := *(s.progressBar.(*progressBarImpl))
 	return &Context{
-		Actions: s.Actions,
-		values:  s.contextValues,
-		Args:    args,
-		Cmd:     *cmd,
+		Actions:     s.Actions,
+		values:      s.contextValues,
+		progressBar: &progressBar,
+		Args:        args,
+		Cmd:         *cmd,
 	}
 }

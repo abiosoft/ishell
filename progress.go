@@ -8,8 +8,6 @@ import (
 	"unicode/utf8"
 )
 
-var simpleCharSet = []string{"█▒▒▒▒▒▒▒▒▒", "███▒▒▒▒▒▒▒", "█████▒▒▒▒▒", "███████▒▒▒", "██████████"}
-
 // ProgressDisplay handles the display string for
 // a progress bar.
 type ProgressDisplay interface {
@@ -62,15 +60,18 @@ type progressBarImpl struct {
 	writer        io.Writer
 	writtenLen    int
 	running       bool
+	wait          chan struct{}
+	wMutex        sync.Mutex
 	sync.Mutex
 }
 
 func newProgressBar(s *Shell) ProgressBar {
+	display := simpleProgressDisplay{}
 	return &progressBarImpl{
 		interval:      progressInterval,
 		writer:        s.writer,
-		display:       ProgressDisplayCharSet(simpleCharSet),
-		iterator:      &stringIterator{set: simpleCharSet},
+		display:       display,
+		iterator:      &stringIterator{set: display.Indeterminate()},
 		indeterminate: true,
 	}
 }
@@ -95,6 +96,7 @@ func (p *progressBarImpl) Progress(percent int) {
 	}
 	p.percent = percent
 	p.indeterminate = false
+	p.refresh()
 }
 
 func (p *progressBarImpl) Prefix(prefix string) {
@@ -123,38 +125,78 @@ func (p progressBarImpl) erase(n int) {
 }
 
 func (p progressBarImpl) clear() {
+	p.wMutex.Lock()
+	defer p.wMutex.Unlock()
+
 	p.erase(p.writtenLen)
 	fmt.Fprintln(p.writer)
 }
 
 func (p *progressBarImpl) output() string {
+	p.Lock()
+	defer p.Unlock()
+
 	var display string
 	if p.indeterminate {
 		display = p.iterator.next()
 	} else {
 		display = p.display.Determinate()[p.percent]
 	}
-	return fmt.Sprintf("%s%s%s", p.prefix, display, p.suffix)
+	return fmt.Sprintf("%s%s%s ", p.prefix, display, p.suffix)
+}
+
+func (p *progressBarImpl) refresh() {
+	p.wMutex.Lock()
+	defer p.wMutex.Unlock()
+
+	p.write(p.output())
 }
 
 func (p *progressBarImpl) Start() {
+	p.Lock()
 	p.running = true
+	p.wait = make(chan struct{})
+	p.Unlock()
+
 	go func() {
-		for p.running {
+		for {
+			var running, indeterminate bool
+			p.Lock()
+			running = p.running
+			indeterminate = p.indeterminate
+			p.Unlock()
+
+			if !running {
+				break
+			}
 			time.Sleep(p.interval)
-			p.write(p.output())
+			if indeterminate {
+				p.refresh()
+			}
 		}
+		p.clear()
+		close(p.wait)
 	}()
 }
 
 func (p *progressBarImpl) Stop() {
+	p.Lock()
 	p.running = false
+	p.Unlock()
+
+	<-p.wait
 }
 
 type ProgressDisplayCharSet []string
 
 func (p ProgressDisplayCharSet) Determinate() [101]string {
+	// TODO everything here works but not pleasing to the eyes
+	// and probably not optimal.
+	// This should be cleaner.
 	var set [101]string
+	for i := range set {
+		set[i] = p[len(p)-1]
+	}
 	// assumption is than len(p) <= 101
 	step := 101 / len(p)
 	for i, j := 0, 0; i < len(set) && j < len(p); i, j = i+step, j+1 {
@@ -210,4 +252,38 @@ func (s *stringIterator) next() string {
 		s.index = 0
 	}
 	return current
+}
+
+var (
+	indeterminateCharSet = []string{
+		"[====                ]", "[ ====               ]", "[  ====              ]",
+		"[   ====             ]", "[    ====            ]", "[     ====           ]",
+		"[      ====          ]", "[       ====         ]", "[        ====        ]",
+		"[         ====       ]", "[          ====      ]", "[           ====     ]",
+		"[            ====    ]", "[             ====   ]", "[              ====  ]",
+		"[               ==== ]", "[                ====]",
+		"[               ==== ]", "[              ====  ]", "[             ====   ]",
+		"[            ====    ]", "[           ====     ]", "[          ====      ]",
+		"[         ====       ]", "[        ====        ]", "[       ====         ]",
+		"[      ====          ]", "[     ====           ]", "[    ====            ]",
+		"[   ====             ]", "[  ====              ]", "[ ====               ]",
+	}
+	determinateCharSet = []string{
+		"[                    ]", "[>                   ]", "[=>                  ]",
+		"[==>                 ]", "[===>                ]", "[====>               ]",
+		"[=====>              ]", "[======>             ]", "[=======>            ]",
+		"[========>           ]", "[=========>          ]", "[==========>         ]",
+		"[===========>        ]", "[============>       ]", "[=============>      ]",
+		"[==============>     ]", "[===============>    ]", "[================>   ]",
+		"[=================>  ]", "[==================> ]", "[===================>]",
+	}
+)
+
+type simpleProgressDisplay struct{}
+
+func (s simpleProgressDisplay) Determinate() [101]string {
+	return ProgressDisplayCharSet(determinateCharSet).Determinate()
+}
+func (s simpleProgressDisplay) Indeterminate() []string {
+	return indeterminateCharSet
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,17 +32,6 @@ func main() {
 				name = strings.Join(c.Args, " ")
 			}
 			c.Println("Hello", name)
-
-			c.ProgressBar().Start()
-			go func() {
-				for i := 0; i < 101; i++ {
-					c.ProgressBar().Progress(i)
-					c.ProgressBar().Suffix(fmt.Sprint("", i, "%"))
-					time.Sleep(time.Millisecond * 100)
-				}
-			}()
-			time.Sleep(13 * time.Second) // Run for some time to simulate work
-			c.ProgressBar().Stop()
 		},
 	})
 
@@ -56,20 +44,38 @@ func main() {
 			lines := c.ReadMultiLines(";")
 			c.Println("Done reading. You wrote:")
 			c.Println(lines)
-			// clear := func() { c.Print("\033[2K") }
-			clear := func(n int) {
-				for i := 0; i < n; i++ {
-					c.Print("\b")
-				}
-			}
-			for i := 0; i < 100; i++ {
-				c.Print(i+1, "%")
-				time.Sleep(time.Millisecond * 100)
-				clear(len(strconv.Itoa(i+1)) + 1)
-			}
-			c.Println()
 		},
 	})
+
+	// progress bars
+	{
+		// determinate
+		shell.AddCmd(&ishell.Cmd{
+			Name: "det",
+			Help: "determinate progress bar",
+			Func: func(c *ishell.Context) {
+				c.ProgressBar().Start()
+				for i := 0; i < 101; i++ {
+					c.ProgressBar().Suffix(fmt.Sprint(" ", i, "%"))
+					c.ProgressBar().Progress(i)
+					time.Sleep(time.Millisecond * 100)
+				}
+				c.ProgressBar().Stop()
+			},
+		})
+
+		// indeterminate
+		shell.AddCmd(&ishell.Cmd{
+			Name: "ind",
+			Help: "indeterminate progress bar",
+			Func: func(c *ishell.Context) {
+				c.ProgressBar().Indeterminate(true)
+				c.ProgressBar().Start()
+				time.Sleep(time.Second * 10)
+				c.ProgressBar().Stop()
+			},
+		})
+	}
 
 	// subcommands and custom autocomplete.
 	{
