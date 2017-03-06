@@ -3,6 +3,7 @@ package ishell
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"text/tabwriter"
 )
 
@@ -48,6 +49,7 @@ func (c *Cmd) Children() []*Cmd {
 	for _, cmd := range c.children {
 		cmds = append(cmds, cmd)
 	}
+	sort.Sort(cmdSorter(cmds))
 	return cmds
 }
 
@@ -80,7 +82,7 @@ func (c Cmd) HelpText() string {
 	if c.hasSubcommand() {
 		p("Commands:")
 		w := tabwriter.NewWriter(&b, 0, 4, 2, ' ', 0)
-		for _, child := range c.children {
+		for _, child := range c.Children() {
 			fmt.Fprintf(w, "\t%s\t\t\t%s\n", child.Name, child.Help)
 		}
 		w.Flush()
@@ -103,3 +105,9 @@ func (c Cmd) FindCmd(args []string) (*Cmd, []string) {
 	}
 	return cmd, nil
 }
+
+type cmdSorter []*Cmd
+
+func (c cmdSorter) Len() int           { return len(c) }
+func (c cmdSorter) Less(i, j int) bool { return c[i].Name < c[j].Name }
+func (c cmdSorter) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }

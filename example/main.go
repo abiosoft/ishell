@@ -18,7 +18,22 @@ func main() {
 	// handle login.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "login",
-		Func: doLogin,
+		Func: func(c *ishell.Context) {
+			c.ShowPrompt(false)
+			defer c.ShowPrompt(true)
+
+			c.Println("Let's simulate login")
+
+			// prompt for input
+			c.Print("Username: ")
+			username := c.ReadLine()
+			c.Print("Password: ")
+			password := c.ReadPassword()
+
+			// do something with username and password
+			c.Println("Your inputs were", username, "and", password+".")
+
+		},
 		Help: "simulate a login",
 	})
 
@@ -137,21 +152,4 @@ This is another line of it.
 
 	// start shell
 	shell.Start()
-}
-
-func doLogin(c *ishell.Context) {
-	c.ShowPrompt(false)
-	defer c.ShowPrompt(true)
-
-	c.Println("Let's simulate login")
-
-	// prompt for input
-	c.Print("Username: ")
-	username := c.ReadLine()
-	c.Print("Password: ")
-	password := c.ReadPassword()
-
-	// do something with username and password
-	c.Println("Your inputs were", username, "and", password+".")
-
 }
