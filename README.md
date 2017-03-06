@@ -137,6 +137,47 @@ Custom
 shell.Interrupt(func(count int, c *ishell.Context) { ... })
 ```
 
+### Progress Bar
+Determinate
+```go
+func(c *ishell.Context) {
+    c.ProgressBar().Start()
+    for i := 0; i < 101; i++ {
+        c.ProgressBar().Suffix(fmt.Sprint(" ", i, "%"))
+        c.ProgressBar().Progress(i)
+        ... // some background computation
+    }
+    c.ProgressBar().Stop()
+}
+```
+Output
+```
+[==========>         ] 50%
+```
+Indeterminate
+```go
+
+func(c *ishell.Context) {
+    c.ProgressBar().Indeterminate(true)
+    c.ProgressBar().Start()
+    ... // some background computation
+    c.ProgressBar().Stop()
+}
+```
+Output
+```
+[ ====               ]
+```
+
+Custom display using [briandowns/spinner](https://github.com/briandowns/spinner).
+```go
+display := ishell.ProgressDisplayCharSet(spinner.CharSets[11])
+func(c *Context) { c.ProgressBar().Display(display) ... }
+
+// or set it globally
+ishell.ProgressBar().Display(display)
+```
+
 ### Durable history.
 ```go
 // Read and write history to $HOME/.ishell_history
@@ -164,7 +205,7 @@ ishell is in active development and can still change significantly.
 * [x] Handle ^C interrupts.
 * [x] Subcommands and help texts.
 * [x] Scrollable paged output.
-* [ ] Progress bar.
+* [x] Progress bar.
 * [ ] Testing, testing, testing.
 
 ## Contribution
