@@ -187,8 +187,11 @@ func (p *progressBarImpl) Stop() {
 	<-p.wait
 }
 
+// ProgressDisplayCharSet is the character set for
+// a progress bar.
 type ProgressDisplayCharSet []string
 
+// Determinate satisfies ProgressDisplay interface.
 func (p ProgressDisplayCharSet) Determinate() [101]string {
 	// TODO everything here works but not pleasing to the eyes
 	// and probably not optimal.
@@ -207,6 +210,7 @@ func (p ProgressDisplayCharSet) Determinate() [101]string {
 	return set
 }
 
+// Indeterminate satisfies ProgressDisplay interface.
 func (p ProgressDisplayCharSet) Indeterminate() []string {
 	return p
 }
@@ -215,6 +219,7 @@ func (p ProgressDisplayCharSet) Indeterminate() []string {
 // percent is -1 for indeterminate and 0-100 for determinate.
 type ProgressDisplayFunc func(percent int) string
 
+// Determinate satisfies ProgressDisplay interface.
 func (p ProgressDisplayFunc) Determinate() [101]string {
 	var set [101]string
 	for i := range set {
@@ -223,6 +228,7 @@ func (p ProgressDisplayFunc) Determinate() [101]string {
 	return set
 }
 
+// Indeterminate satisfies ProgressDisplay interface.
 func (p ProgressDisplayFunc) Indeterminate() []string {
 	// loop through until we get back to the first string
 	set := []string{p(-1)}
