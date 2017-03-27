@@ -23,20 +23,20 @@ func main(){
     // by default, new shell includes 'exit', 'help' and 'clear' commands.
     shell := ishell.New()
 
-	// display welcome info.
-	shell.Println("Sample Interactive Shell")
+    // display welcome info.
+    shell.Println("Sample Interactive Shell")
 
-	// register a function for "greet" command.
+    // register a function for "greet" command.
     shell.AddCmd(&ishell.Cmd{
-		Name: "greet",
-		Help: "greet user",
-		Func: func(c *ishell.Context) {
-			c.Println("Hello", strings.Join(c.Args, " "))
-		},
-	})
+        Name: "greet",
+        Help: "greet user",
+        Func: func(c *ishell.Context) {
+            c.Println("Hello", strings.Join(c.Args, " "))
+        },
+    })
 
-	// start shell
-	shell.Start()
+    // start shell
+    shell.Start()
 }
 ```
 Execution
@@ -60,25 +60,25 @@ $
 ```go
 // simulate an authentication
 shell.AddCmd(&ishell.Cmd{
-	Name: "login",
-	Help: "simulate a login",
-	Func: func(c *ishell.Context) {
-		// disable the '>>>' for cleaner same line input.
-		c.ShowPrompt(false)
-		defer c.ShowPrompt(true) // yes, revert after login.
+    Name: "login",
+    Help: "simulate a login",
+    Func: func(c *ishell.Context) {
+        // disable the '>>>' for cleaner same line input.
+        c.ShowPrompt(false)
+        defer c.ShowPrompt(true) // yes, revert after login.
 
-		 // get username
-		c.Print("Username: ")
-		username := c.ReadLine()
+        // get username
+        c.Print("Username: ")
+        username := c.ReadLine()
 
-		// get password.
-		c.Print("Password: ")
-		password := c.ReadPassword()
+        // get password.
+        c.Print("Password: ")
+        password := c.ReadPassword()
 
-		... // do something with username and password
+        ... // do something with username and password
 
-		c.Println("Authentication Successful.")
-	},
+        c.Println("Authentication Successful.")
+    },
 })
 ```
 Execution
@@ -103,14 +103,14 @@ Builtin support for multiple lines.
 User defined
 ```go
 shell.AddCmd(&ishell.Cmd{
-	Name: "multi",
-	Help: "input in multiple lines",
-	Func: func(c *ishell.Context) {
-		c.Println("Input multiple lines and end with semicolon ';'.")
-		lines := c.ReadMultiLines(";")
-		c.Println("Done reading. You wrote:")
-		c.Println(lines)
-	},
+    Name: "multi",
+    Help: "input in multiple lines",
+    Func: func(c *ishell.Context) {
+        c.Println("Input multiple lines and end with semicolon ';'.")
+        lines := c.ReadMultiLines(";")
+        c.Println("Done reading. You wrote:")
+        c.Println(lines)
+    },
 })
 ```
 Execution
