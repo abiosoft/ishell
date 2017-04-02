@@ -50,7 +50,12 @@ type Shell struct {
 
 // New creates a new shell with default settings. Uses standard output and default prompt ">> ".
 func New() *Shell {
-	rl, err := readline.New(defaultPrompt)
+	return NewWithConfig(&readline.Config{Prompt: defaultPrompt})
+}
+
+// NewWithConfig creates a new shell with custom readline config.
+func NewWithConfig(conf *readline.Config) *Shell {
+	rl, err := readline.NewEx(conf)
 	if err != nil {
 		log.Println("Shell or operating system not supported.")
 		log.Fatal(err)
@@ -65,7 +70,7 @@ func New() *Shell {
 			buf:         &bytes.Buffer{},
 			completer:   readline.NewPrefixCompleter(),
 		},
-		writer:   os.Stdout,
+		writer:   conf.Stdout,
 		haltChan: make(chan struct{}),
 		autoHelp: true,
 	}
