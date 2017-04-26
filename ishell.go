@@ -99,11 +99,11 @@ func (s *Shell) start() {
 
 shell:
 	for s.Active() {
-		var line []string
+		var line, rawline []string
 		var err error
 		read := make(chan struct{})
 		go func() {
-			line, err = s.read()
+			line, rawline, err = s.read()
 			read <- struct{}{}
 		}()
 		select {
@@ -118,7 +118,7 @@ shell:
 				fmt.Println("EOF")
 				break
 			}
-			if err := handleEOF(s); err != nil {
+			if err := handleEOF(s, rawline); err != nil {
 				s.Println("Error:", err)
 				continue
 			}
@@ -129,7 +129,7 @@ shell:
 
 		if err == readline.ErrInterrupt {
 			// interrupt received
-			err = handleInterrupt(s, line)
+			err = handleInterrupt(s, line, rawline)
 		} else {
 			// reset interrupt counter
 			s.interruptCount = 0
@@ -140,7 +140,7 @@ shell:
 				continue
 			}
 
-			err = handleInput(s, line)
+			err = handleInput(s, line, rawline)
 		}
 		if err != nil {
 			s.Println("Error:", err)
@@ -155,8 +155,8 @@ func (s *Shell) Active() bool {
 	return s.active
 }
 
-func handleInput(s *Shell, line []string) error {
-	handled, err := s.handleCommand(line)
+func handleInput(s *Shell, line, rawline []string) error {
+	handled, err := s.handleCommand(line, rawline)
 	if handled || err != nil {
 		return err
 	}
@@ -165,28 +165,28 @@ func handleInput(s *Shell, line []string) error {
 	if s.generic == nil {
 		return errNoHandler
 	}
-	c := newContext(s, nil, line)
+	c := newContext(s, nil, line, rawline)
 	s.generic(c)
 	return c.err
 }
 
-func handleInterrupt(s *Shell, line []string) error {
+func handleInterrupt(s *Shell, line, rawline []string) error {
 	if s.interrupt == nil {
 		return errNoInterruptHandler
 	}
-	c := newContext(s, nil, line)
+	c := newContext(s, nil, line, rawline)
 	s.interruptCount++
 	s.interrupt(s.interruptCount, c)
 	return c.err
 }
 
-func handleEOF(s *Shell) error {
-	c := newContext(s, nil, nil)
+func handleEOF(s *Shell, rawline []string) error {
+	c := newContext(s, nil, nil, rawline)
 	s.eof(c)
 	return c.err
 }
 
-func (s *Shell) handleCommand(str []string) (bool, error) {
+func (s *Shell) handleCommand(str, rawline []string) (bool, error) {
 	if s.ignoreCase {
 		for i := range str {
 			str[i] = strings.ToLower(str[i])
@@ -201,7 +201,7 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 		s.Println(cmd.HelpText())
 		return true, nil
 	}
-	c := newContext(s, cmd, args)
+	c := newContext(s, cmd, args, rawline)
 	cmd.Func(c)
 	return true, c.err
 }
@@ -214,7 +214,7 @@ func (s *Shell) readLine() (line string, err error) {
 	return ls.line, ls.err
 }
 
-func (s *Shell) read() ([]string, error) {
+func (s *Shell) read() ([]string, []string, error) {
 	heredoc := false
 	eof := ""
 	// heredoc multiline
@@ -239,20 +239,22 @@ func (s *Shell) read() ([]string, error) {
 
 		arg := strings.TrimSuffix(strings.SplitN(s[1], "\n", 2)[1], eof)
 		args = append(args, arg)
+		rawargs := []string{s[0], arg}
 		if err1 != nil {
-			return args, err1
+			return args, rawargs, err1
 		}
-		return args, err
+		return args, rawargs, err
 	}
 
+	rawargs := strings.Split(lines, "\\\n")
 	lines = strings.Replace(lines, "\\\n", " \n", -1)
 
 	args, err1 := shlex.Split(lines)
 	if err1 != nil {
-		return args, err1
+		return args, rawargs, err1
 	}
 
-	return args, err
+	return args, rawargs, err
 }
 
 func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
@@ -387,7 +389,7 @@ func (s *Shell) ProgressBar() ProgressBar {
 	return s.progressBar
 }
 
-func newContext(s *Shell, cmd *Cmd, args []string) *Context {
+func newContext(s *Shell, cmd *Cmd, args, rawargs []string) *Context {
 	if cmd == nil {
 		cmd = &Cmd{}
 	}
@@ -396,6 +398,7 @@ func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 		values:      s.contextValues,
 		progressBar: copyShellProgressBar(s),
 		Args:        args,
+		RawArgs:     rawargs,
 		Cmd:         *cmd,
 	}
 }
