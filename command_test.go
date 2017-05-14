@@ -59,3 +59,12 @@ func TestHelpText(t *testing.T) {
 	expected := "\nhelp for root command\n\nCommands:\n  child1      help for child1 command\n  child2      help for child2 command\n\n"
 	assert.Equal(t, res, expected)
 }
+
+func TestChildrenSortedAlphabetically(t *testing.T) {
+	cmd := newCmd("root", "help for root command")
+	cmd.AddCmd(newCmd("child2", "help for child1 command"))
+	cmd.AddCmd(newCmd("child1", "help for child2 command"))
+	children := cmd.Children()
+	assert.Equal(t, children[0].Name, "child1", "must be first")
+	assert.Equal(t, children[1].Name, "child2", "must be second")
+}
