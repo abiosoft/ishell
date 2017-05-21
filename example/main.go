@@ -62,6 +62,25 @@ func main() {
 		},
 	})
 
+	// multichoice
+	shell.AddCmd(&ishell.Cmd{
+		Name: "choice",
+		Help: "do multichoice",
+		Func: func(c *ishell.Context) {
+			choice := c.MultiChoice([]string{
+				"Golangers",
+				"Go programmers",
+				"Gophers",
+				"Goers",
+			}, "What are Go programmers called ?")
+			if choice == 2 {
+				c.Println("You got it!")
+			} else {
+				c.Println("Sorry, you're wrong.")
+			}
+		},
+	})
+
 	// progress bars
 	{
 		// determinate

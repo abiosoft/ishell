@@ -31,6 +31,11 @@ type Actions interface {
 	// ShowPaged shows a paged text that is scrollable.
 	// This leverages on "less" for unix and "more" for windows.
 	ShowPaged(text string) error
+	// MultiChoice presents options to the user.
+	// returns the index of the selection or -1 if nothing is
+	// selected.
+	// text is displayed before the options.
+	MultiChoice(options []string, text string) int
 	// SetPrompt sets the prompt string. The string to be displayed before the cursor.
 	SetPrompt(prompt string)
 	// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before

@@ -137,6 +137,34 @@ Custom
 shell.Interrupt(func(count int, c *ishell.Context) { ... })
 ```
 
+### Multiple Choice
+
+```go
+func(c *ishell.Context) {
+    choice := c.MultiChoice([]string{
+        "Golangers",
+        "Go programmers",
+        "Gophers",
+        "Goers",
+    }, "What are Go programmers called ?")
+    if choice == 2 {
+        c.Println("You got it!")
+    } else {
+        c.Println("Sorry, you're wrong.")
+    }
+},
+```
+Output
+```
+What are Go programmers called ?
+  Golangers
+  Go programmers
+❯ Gophers
+  Goers
+
+You got it!
+```
+
 ### Progress Bar
 Determinate
 ```go
@@ -207,6 +235,8 @@ ishell is in active development and can still change significantly.
 * [x] Subcommands and help texts.
 * [x] Scrollable paged output.
 * [x] Progress bar.
+* [x] Multiple choice prompt.
+* [x] Multiple line progress bars.
 * [ ] Testing, testing, testing.
 
 ## Contribution

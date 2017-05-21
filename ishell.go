@@ -12,7 +12,9 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/flynn-archive/go-shlex"
 	"gopkg.in/readline.v1"
 )
@@ -373,6 +375,76 @@ func (s *Shell) SetHomeHistoryPath(path string) {
 // SetOut sets the writer to write outputs to.
 func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
+}
+
+// MultiChoice presents options to the user.
+// returns the index of the selection or -1 if nothing is
+// selected.
+// text is displayed before the options.
+func (s *Shell) MultiChoice(options []string, text string) int {
+	s.reader.scanner.Config.DisableAutoSaveHistory = true
+	defer func() { s.reader.scanner.Config.DisableAutoSaveHistory = false }()
+
+	s.ShowPrompt(false)
+	defer s.ShowPrompt(true)
+
+	selected := 0
+	update := func() {
+		s.Println()
+		s.Println(buildOptionsString(options, selected))
+		s.Printf("\033[%dA", len(options)+1)
+		s.Print("\033[2K")
+		s.Print(text)
+	}
+	var lastKey rune
+	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
+		if key == 14 {
+			selected++
+			if selected >= len(options) {
+				selected = 0
+			}
+		} else if key == 16 {
+			selected--
+			if selected < 0 {
+				selected = len(options) - 1
+			}
+		}
+		update()
+		lastKey = key
+		return
+	}
+	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
+	defer func() { s.reader.scanner.Config.Listener = nil }()
+
+	// delay a bit before printing
+	// TODO this works but there may be better way
+	go func() {
+		time.Sleep(time.Millisecond * 200)
+		update()
+	}()
+	s.ReadLine()
+	s.Println()
+	switch lastKey {
+	case 3, 127:
+		return -1
+	}
+	return selected
+}
+
+func buildOptionsString(options []string, index int) string {
+	str := ""
+	for i, opt := range options {
+		if i == index {
+			blue := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
+			str += blue("❯ " + opt)
+		} else {
+			str += "  " + opt
+		}
+		if i < len(options)-1 {
+			str += "\n"
+		}
+	}
+	return str
 }
 
 // IgnoreCase specifies whether commands should not be case sensitive.
