@@ -236,7 +236,7 @@ ishell is in active development and can still change significantly.
 * [x] Scrollable paged output.
 * [x] Progress bar.
 * [x] Multiple choice prompt.
-* [x] Multiple line progress bars.
+* [ ] Multiple line progress bars.
 * [ ] Testing, testing, testing.
 
 ## Contribution
