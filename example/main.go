@@ -62,10 +62,10 @@ func main() {
 		},
 	})
 
-	// multichoice
+	// multiple choice
 	shell.AddCmd(&ishell.Cmd{
 		Name: "choice",
-		Help: "do multichoice",
+		Help: "multiple choice prompt",
 		Func: func(c *ishell.Context) {
 			choice := c.MultiChoice([]string{
 				"Golangers",

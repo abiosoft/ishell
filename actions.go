@@ -101,6 +101,9 @@ func (s *shellActionsImpl) Printf(format string, val ...interface{}) {
 	fmt.Fprintf(s.writer, format, val...)
 }
 
+func (s *shellActionsImpl) MultiChoice(options []string, text string) int {
+	return s.multiChoice(options, text)
+}
 func (s *shellActionsImpl) SetPrompt(prompt string) {
 	s.reader.prompt = prompt
 	s.reader.scanner.SetPrompt(s.reader.rlPrompt())
