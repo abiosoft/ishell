@@ -7,10 +7,14 @@ import (
 )
 
 type iCompleter struct {
-	cmd *Cmd
+	cmd      *Cmd
+	disabled func() bool
 }
 
 func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
+	if ic.disabled != nil && ic.disabled() {
+		return nil, len(line)
+	}
 	var words []string
 	if w, err := shlex.Split(string(line)); err == nil {
 		words = w

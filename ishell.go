@@ -31,22 +31,23 @@ var (
 
 // Shell is an interactive cli shell.
 type Shell struct {
-	rootCmd         *Cmd
-	generic         func(*Context)
-	interrupt       func(int, *Context)
-	interruptCount  int
-	eof             func(*Context)
-	reader          *shellReader
-	writer          io.Writer
-	active          bool
-	activeMutex     sync.RWMutex
-	ignoreCase      bool
-	customCompleter bool
-	haltChan        chan struct{}
-	historyFile     string
-	contextValues   map[string]interface{}
-	autoHelp        bool
-	progressBar     ProgressBar
+	rootCmd           *Cmd
+	generic           func(*Context)
+	interrupt         func(int, *Context)
+	interruptCount    int
+	eof               func(*Context)
+	reader            *shellReader
+	writer            io.Writer
+	active            bool
+	activeMutex       sync.RWMutex
+	ignoreCase        bool
+	customCompleter   bool
+	multiChoiceActive bool
+	haltChan          chan struct{}
+	historyFile       string
+	contextValues     map[string]interface{}
+	autoHelp          bool
+	progressBar       ProgressBar
 	Actions
 }
 
@@ -284,7 +285,7 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 }
 
 func (s *Shell) initCompleters() {
-	s.setCompleter(iCompleter{s.rootCmd})
+	s.setCompleter(iCompleter{cmd: s.rootCmd, disabled: func() bool { return s.multiChoiceActive }})
 }
 
 func (s *Shell) setCompleter(completer readline.AutoCompleter) {
@@ -377,16 +378,19 @@ func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
 }
 
-// MultiChoice presents options to the user.
-// returns the index of the selection or -1 if nothing is
-// selected.
-// text is displayed before the options.
-func (s *Shell) MultiChoice(options []string, text string) int {
+func (s *Shell) multiChoice(options []string, text string) int {
+	s.multiChoiceActive = true
+	defer func() { s.multiChoiceActive = false }()
+
 	s.reader.scanner.Config.DisableAutoSaveHistory = true
 	defer func() { s.reader.scanner.Config.DisableAutoSaveHistory = false }()
 
 	s.ShowPrompt(false)
 	defer s.ShowPrompt(true)
+
+	// TODO this may not work on windows.
+	s.Print("\033[?25l")
+	defer s.Print("\033[?25h")
 
 	selected := 0
 	update := func() {
@@ -398,6 +402,7 @@ func (s *Shell) MultiChoice(options []string, text string) int {
 	}
 	var lastKey rune
 	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
+		lastKey = key
 		if key == 14 {
 			selected++
 			if selected >= len(options) {
@@ -410,7 +415,6 @@ func (s *Shell) MultiChoice(options []string, text string) int {
 			}
 		}
 		update()
-		lastKey = key
 		return
 	}
 	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
@@ -424,8 +428,12 @@ func (s *Shell) MultiChoice(options []string, text string) int {
 	}()
 	s.ReadLine()
 	s.Println()
+
+	// only handles Ctrl-c for now
+	// this can be broaden later
 	switch lastKey {
-	case 3, 127:
+	// Ctrl-c
+	case 3:
 		return -1
 	}
 	return selected
