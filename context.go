@@ -9,6 +9,9 @@ type Context struct {
 	// Args is command arguments.
 	Args []string
 
+	// RawArgs is unprocessed command arguments.
+	RawArgs []string
+
 	// Cmd is the currently executing command. This is empty for NotFound and Interrupt.
 	Cmd Cmd
 
