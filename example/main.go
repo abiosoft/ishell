@@ -170,5 +170,5 @@ This is another line of it.
 	})
 
 	// start shell
-	shell.Start()
+	shell.Run()
 }

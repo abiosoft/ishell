@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/flynn-archive/go-shlex"
-	"gopkg.in/readline.v1"
 )
 
 const (
@@ -74,7 +74,6 @@ func NewWithConfig(conf *readline.Config) *Shell {
 			completer:   readline.NewPrefixCompleter(),
 		},
 		writer:   conf.Stdout,
-		haltChan: make(chan struct{}),
 		autoHelp: true,
 	}
 	shell.Actions = &shellActionsImpl{Shell: shell}
@@ -83,13 +82,42 @@ func NewWithConfig(conf *readline.Config) *Shell {
 	return shell
 }
 
-// Start starts the shell. It reads inputs from standard input and calls associated command.
-// This function blocks until the shell is stopped.
+// Start starts the shell but does not wait for it to stop.
 func (s *Shell) Start() {
-	s.start()
+	s.prepareRun()
+	go s.run()
 }
 
-func (s *Shell) start() {
+// Run starts the shell and waits for it to stop.
+func (s *Shell) Run() {
+	s.prepareRun()
+	s.run()
+}
+
+// Wait waits for the shell to stop.
+func (s *Shell) Wait() {
+	<-s.haltChan
+}
+
+func (s *Shell) stop() {
+	if !s.Active() {
+		return
+	}
+	s.activeMutex.Lock()
+	s.active = false
+	s.activeMutex.Unlock()
+	close(s.haltChan)
+}
+
+// Close stops the shell (if required) and closes the shell's input.
+// This should be called when done with reading inputs.
+// Unlike `Stop`, a closed shell cannot be restarted.
+func (s *Shell) Close() {
+	s.stop()
+	s.reader.scanner.Close()
+}
+
+func (s *Shell) prepareRun() {
 	if s.Active() {
 		return
 	}
@@ -100,6 +128,10 @@ func (s *Shell) start() {
 	s.active = true
 	s.activeMutex.Unlock()
 
+	s.haltChan = make(chan struct{})
+}
+
+func (s *Shell) run() {
 shell:
 	for s.Active() {
 		var line []string
@@ -156,6 +188,11 @@ func (s *Shell) Active() bool {
 	s.activeMutex.RLock()
 	defer s.activeMutex.RUnlock()
 	return s.active
+}
+
+// Process runs shell using args in a non-interactive mode.
+func (s *Shell) Process(args ...string) error {
+	return handleInput(s, args)
 }
 
 func handleInput(s *Shell, line []string) error {
@@ -259,7 +296,7 @@ func (s *Shell) read() ([]string, error) {
 }
 
 func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
-	lines := bytes.NewBufferString("")
+	var lines bytes.Buffer
 	currentLine := 0
 	var err error
 	for {
@@ -269,11 +306,11 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 		}
 		var line string
 		line, err = s.readLine()
-		fmt.Fprint(lines, line)
+		fmt.Fprint(&lines, line)
 		if !f(line) || err != nil {
 			break
 		}
-		fmt.Fprintln(lines)
+		fmt.Fprintln(&lines)
 		currentLine++
 	}
 	if currentLine > 0 {
@@ -289,16 +326,9 @@ func (s *Shell) initCompleters() {
 }
 
 func (s *Shell) setCompleter(completer readline.AutoCompleter) {
-	var err error
-	// close current scanner and rebuild it with
-	// autocomplete
-	s.reader.scanner.Close()
 	config := s.reader.scanner.Config
 	config.AutoComplete = completer
-	s.reader.scanner, err = readline.NewEx(config)
-	if err != nil {
-		log.Fatal(err)
-	}
+	s.reader.scanner.SetConfig(config)
 }
 
 // CustomCompleter allows use of custom implementation of readline.Autocompleter.
@@ -341,7 +371,7 @@ func (s *Shell) Interrupt(f func(count int, c *Context)) {
 	s.interrupt = f
 }
 
-// EOF adds a functon to handle End of File input (Ctrl-d).
+// EOF adds a function to handle End of File input (Ctrl-d).
 // This overrides the default behaviour which terminates the shell.
 func (s *Shell) EOF(f func(c *Context)) {
 	s.eof = f
@@ -349,17 +379,10 @@ func (s *Shell) EOF(f func(c *Context)) {
 
 // SetHistoryPath sets where readlines history file location. Use an empty
 // string to disable history file. It is empty by default.
-func (s *Shell) SetHistoryPath(path string) error {
-	var err error
-
-	// Using scanner.SetHistoryPath doesn't initialize things properly and
-	// history file is never written. Simpler to just create a new readline
-	// Instance.
-	s.reader.scanner.Close()
+func (s *Shell) SetHistoryPath(path string) {
 	config := s.reader.scanner.Config
 	config.HistoryFile = path
-	s.reader.scanner, err = readline.NewEx(config)
-	return err
+	s.reader.scanner.SetConfig(config)
 }
 
 // SetHomeHistoryPath is a convenience method that sets the history path
@@ -385,6 +408,17 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	s.reader.scanner.Config.DisableAutoSaveHistory = true
 	defer func() { s.reader.scanner.Config.DisableAutoSaveHistory = false }()
 
+	s.reader.scanner.Config.FuncFilterInputRune = func(r rune) (rune, bool) {
+		switch r {
+		case 16:
+			return -1, true
+		case 14:
+			return -2, true
+		}
+		return r, true
+	}
+	defer func() { s.reader.scanner.Config.FuncFilterInputRune = nil }()
+
 	s.ShowPrompt(false)
 	defer s.ShowPrompt(true)
 
@@ -403,12 +437,12 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	var lastKey rune
 	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
 		lastKey = key
-		if key == 14 {
+		if key == -2 {
 			selected++
 			if selected >= len(options) {
 				selected = 0
 			}
-		} else if key == 16 {
+		} else if key == -1 {
 			selected--
 			if selected < 0 {
 				selected = len(options) - 1
@@ -428,6 +462,8 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	}()
 	s.ReadLine()
 	s.Println()
+	s.Println(buildOptionsString(options, selected))
+	s.Println()
 
 	// only handles Ctrl-c for now
 	// this can be broaden later
@@ -441,10 +477,14 @@ func (s *Shell) multiChoice(options []string, text string) int {
 
 func buildOptionsString(options []string, index int) string {
 	str := ""
+	symbol := "❯ "
+	if runtime.GOOS == "windows" {
+		symbol = "> "
+	}
 	for i, opt := range options {
 		if i == index {
 			blue := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-			str += blue("❯ " + opt)
+			str += blue(symbol + opt)
 		} else {
 			str += "  " + opt
 		}

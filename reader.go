@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"gopkg.in/readline.v1"
+	"github.com/chzyer/readline"
 )
 
 type (

@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
 
 // Actions are actions that can be performed by a shell.
@@ -52,7 +54,7 @@ type Actions interface {
 	ClearScreen() error
 	// Stop stops the shell. This will stop the shell from auto reading inputs and calling
 	// registered functions. A stopped shell is only inactive but totally functional.
-	// Its functions can still be called.
+	// Its functions can still be called and can be restarted.
 	Stop()
 }
 
@@ -135,16 +137,7 @@ func (s *shellActionsImpl) ShowPaged(text string) error {
 }
 
 func (s *shellActionsImpl) Stop() {
-	s.reader.scanner.Close()
-	if !s.Active() {
-		return
-	}
-	s.activeMutex.Lock()
-	s.active = false
-	s.activeMutex.Unlock()
-	go func() {
-		s.haltChan <- struct{}{}
-	}()
+	s.stop()
 }
 
 func (s *shellActionsImpl) HelpText() string {
@@ -152,14 +145,8 @@ func (s *shellActionsImpl) HelpText() string {
 }
 
 func clearScreen(s *Shell) error {
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", "cls")
-	} else {
-		cmd = exec.Command("clear")
-	}
-	cmd.Stdout = s.writer
-	return cmd.Run()
+	_, err := readline.ClearScreen(s.writer)
+	return err
 }
 
 func showPaged(s *Shell, text string) error {
