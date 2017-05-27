@@ -380,9 +380,12 @@ func (s *Shell) EOF(f func(c *Context)) {
 // SetHistoryPath sets where readlines history file location. Use an empty
 // string to disable history file. It is empty by default.
 func (s *Shell) SetHistoryPath(path string) {
-	config := s.reader.scanner.Config
+	// Using scanner.SetHistoryPath doesn't initialize things properly and
+	// history file is never written. Simpler to just create a new readline
+	// Instance.
+	config := s.reader.scanner.Config.Clone()
 	config.HistoryFile = path
-	s.reader.scanner.SetConfig(config)
+	s.reader.scanner, _ = readline.NewEx(config)
 }
 
 // SetHomeHistoryPath is a convenience method that sets the history path
