@@ -47,6 +47,7 @@ type Shell struct {
 	historyFile       string
 	contextValues     map[string]interface{}
 	autoHelp          bool
+	rawArgs           []string
 	progressBar       ProgressBar
 	Actions
 }
@@ -255,6 +256,7 @@ func (s *Shell) readLine() (line string, err error) {
 }
 
 func (s *Shell) read() ([]string, error) {
+	s.rawArgs = nil
 	heredoc := false
 	eof := ""
 	// heredoc multiline
@@ -272,6 +274,8 @@ func (s *Shell) read() ([]string, error) {
 		}
 		return strings.HasSuffix(strings.TrimSpace(line), "\\")
 	})
+
+	s.rawArgs = strings.Fields(lines)
 
 	if heredoc {
 		s := strings.SplitN(lines, "<<", 2)
@@ -500,7 +504,7 @@ func buildOptionsString(options []string, index int) string {
 
 // IgnoreCase specifies whether commands should not be case sensitive.
 // Defaults to false i.e. commands are case sensitive.
-// If true, commands must be registered in lower cases. e.g. shell.Register("cmd", ...)
+// If true, commands must be registered in lower cases.
 func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
 }
@@ -519,6 +523,7 @@ func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 		values:      s.contextValues,
 		progressBar: copyShellProgressBar(s),
 		Args:        args,
+		RawArgs:     s.rawArgs,
 		Cmd:         *cmd,
 	}
 }
