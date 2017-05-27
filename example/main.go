@@ -171,4 +171,7 @@ This is another line of it.
 
 	// start shell
 	shell.Run()
+
+	// teardown
+	shell.Close()
 }
