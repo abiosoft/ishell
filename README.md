@@ -250,7 +250,7 @@ MIT
 Library | Use
 ------- | -----
 [github.com/flynn-archive/go-shlex](http://github.com/flynn-archive/go-shlex) | splitting input into command and args.
-[github.com/chzyer/readline"](github.com/chzyer/readline") | history, tab completion and reading passwords.
+[github.com/chzyer/readline](github.com/chzyer/readline) | readline capabilities.
 
 ## Donate
 ```
