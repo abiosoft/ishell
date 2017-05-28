@@ -1,5 +1,9 @@
 For now, dates (DD/MM/YYYY) are used until ishell gets stable enough to warrant tags.
 Attempts will be made to ensure non breaking updates as much as possible.
+#### 28/05/2017
+* Added `shell.Process(os.Args[1:]...)` for non-interactive execution
+*
+
 
 #### 07/02/2016
 Added multiline support to shell mode.

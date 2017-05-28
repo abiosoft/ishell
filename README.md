@@ -213,6 +213,32 @@ ishell.ProgressBar().Display(display)
 shell.SetHomeHistoryPath(".ishell_history")
 ```
 
+
+### Non-interactive execution
+In some situations it is desired to exit the program directly after executing a single command.
+
+```go
+// when started with "exit" as first argument, assume non-interactive execution
+if len(os.Args) > 1 && os.Args[1] == "exit" {
+    shell.Process(os.Args[2:]...)
+} else {
+    // start shell
+    shell.Run()
+}
+```
+
+```bash
+# Run normally - interactive mode:
+$ go run main.go
+... interactive shell
+
+# Run non-interactivelly
+$ go run main.go exit greet Someusername
+> Sample Interactive Shell
+> Hello Someusername
+```
+
+
 ### Example
 Available [here](https://github.com/abiosoft/ishell/blob/master/example/main.go).
 ```sh
@@ -251,6 +277,7 @@ Library | Use
 ------- | -----
 [github.com/flynn-archive/go-shlex](http://github.com/flynn-archive/go-shlex) | splitting input into command and args.
 [github.com/chzyer/readline](github.com/chzyer/readline) | readline capabilities.
+
 
 ## Donate
 ```

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -169,9 +170,13 @@ This is another line of it.
 		},
 	})
 
-	// start shell
-	shell.Run()
-
-	// teardown
-	shell.Close()
+	// when started with "exit" as first argument, assume non-interactive execution
+	if len(os.Args) > 1 && os.Args[1] == "exit" {
+		shell.Process(os.Args[2:]...)
+	} else {
+		// start shell
+		shell.Run()
+		// teardown
+		shell.Close()
+	}
 }
