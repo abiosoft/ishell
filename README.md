@@ -230,12 +230,11 @@ if len(os.Args) > 1 && os.Args[1] == "exit" {
 ```bash
 # Run normally - interactive mode:
 $ go run main.go
-... interactive shell
+>>> |
 
 # Run non-interactivelly
 $ go run main.go exit greet Someusername
-> Sample Interactive Shell
-> Hello Someusername
+Hello Someusername
 ```
 
 
