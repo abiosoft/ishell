@@ -408,7 +408,32 @@ func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
 }
 
-func (s *Shell) multiChoice(options []string, text string) int {
+func initSelected(init []int, max int) []int {
+	selectedMap := make(map[int]bool)
+	for _, i := range init {
+		if i < max {
+			selectedMap[i] = true
+		}
+	}
+	selected := make([]int, len(selectedMap))
+	i := 0
+	for k := range selectedMap {
+		selected[i] = k
+		i++
+	}
+	return selected
+}
+
+func toggle(selected []int, cur int) []int {
+	for i, s := range selected {
+		if s == cur {
+			return append(selected[:i], selected[i+1:]...)
+		}
+	}
+	return append(selected, cur)
+}
+
+func (s *Shell) multiChoice(options []string, text string, init []int, multiResults bool) []int {
 	s.multiChoiceActive = true
 	defer func() { s.multiChoiceActive = false }()
 
@@ -421,10 +446,15 @@ func (s *Shell) multiChoice(options []string, text string) int {
 			return -1, true
 		case 14:
 			return -2, true
+		case 32:
+			return -3, true
+
 		}
 		return r, true
 	}
 	defer func() { s.reader.scanner.Config.FuncFilterInputRune = nil }()
+
+	selected := initSelected(init, len(options))
 
 	s.ShowPrompt(false)
 	defer s.ShowPrompt(true)
@@ -433,10 +463,13 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	s.Print("\033[?25l")
 	defer s.Print("\033[?25h")
 
-	selected := 0
+	cur := 0
+	if len(selected) > 0 {
+		cur = selected[len(selected)-1]
+	}
 	update := func() {
 		s.Println()
-		s.Println(buildOptionsString(options, selected))
+		s.Println(buildOptionsString(options, selected, cur))
 		s.Printf("\033[%dA", len(options)+1)
 		s.Print("\033[2K")
 		s.Print(text)
@@ -445,14 +478,18 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
 		lastKey = key
 		if key == -2 {
-			selected++
-			if selected >= len(options) {
-				selected = 0
+			cur++
+			if cur >= len(options) {
+				cur = 0
 			}
 		} else if key == -1 {
-			selected--
-			if selected < 0 {
-				selected = len(options) - 1
+			cur--
+			if cur < 0 {
+				cur = len(options) - 1
+			}
+		} else if key == -3 {
+			if multiResults {
+				selected = toggle(selected, cur)
 			}
 		}
 		update()
@@ -469,7 +506,7 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	}()
 	s.ReadLine()
 	s.Println()
-	s.Println(buildOptionsString(options, selected))
+	s.Println(buildOptionsString(options, selected, cur))
 	s.Println()
 
 	// only handles Ctrl-c for now
@@ -477,23 +514,32 @@ func (s *Shell) multiChoice(options []string, text string) int {
 	switch lastKey {
 	// Ctrl-c
 	case 3:
-		return -1
+		return []int{-1}
 	}
-	return selected
+	if multiResults {
+		return selected
+	}
+	return []int{cur}
 }
 
-func buildOptionsString(options []string, index int) string {
+func buildOptionsString(options []string, selected []int, index int) string {
 	str := ""
-	symbol := "❯ "
+	symbol := "❯"
 	if runtime.GOOS == "windows" {
-		symbol = "> "
+		symbol = ">"
 	}
 	for i, opt := range options {
+		mark := " "
+		for _, s := range selected {
+			if s == i {
+				mark = "+"
+			}
+		}
 		if i == index {
 			blue := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-			str += blue(symbol + opt)
+			str += blue(symbol + mark + opt)
 		} else {
-			str += "  " + opt
+			str += " " + mark + opt
 		}
 		if i < len(options)-1 {
 			str += "\n"
