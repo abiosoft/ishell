@@ -38,6 +38,9 @@ type Actions interface {
 	// selected.
 	// text is displayed before the options.
 	MultiChoice(options []string, text string) int
+	// Checklist is similar to MultiChoice but user can choose multiple variants using Space.
+	// init is initially selected options.
+	Checklist(options []string, text string, init []int) []int
 	// SetPrompt sets the prompt string. The string to be displayed before the cursor.
 	SetPrompt(prompt string)
 	// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before
@@ -104,7 +107,11 @@ func (s *shellActionsImpl) Printf(format string, val ...interface{}) {
 }
 
 func (s *shellActionsImpl) MultiChoice(options []string, text string) int {
-	return s.multiChoice(options, text)
+	choice := s.multiChoice(options, text, nil, false)
+	return choice[0]
+}
+func (s *shellActionsImpl) Checklist(options []string, text string, init []int) []int {
+	return s.multiChoice(options, text, init, true)
 }
 func (s *shellActionsImpl) SetPrompt(prompt string) {
 	s.reader.prompt = prompt
