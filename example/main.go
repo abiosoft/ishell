@@ -82,6 +82,25 @@ func main() {
 		},
 	})
 
+	// multiple choice
+	shell.AddCmd(&ishell.Cmd{
+		Name: "checklist",
+		Help: "checklist prompt",
+		Func: func(c *ishell.Context) {
+			languages := []string{"Python", "Go", "Haskell", "Rust"}
+			choices := c.Checklist(languages,
+				"What are your favourite programming languages ?",
+				nil)
+			out := func() (c []string) {
+				for _, v := range choices {
+					c = append(c, languages[v])
+				}
+				return
+			}
+			c.Println("Your choices are", strings.Join(out(), ", "))
+		},
+	})
+
 	// progress bars
 	{
 		// determinate

@@ -164,6 +164,26 @@ What are Go programmers called ?
 
 You got it!
 ```
+### Checklist
+```go
+func(c *ishell.Context) {
+    languages := []string{"Python", "Go", "Haskell", "Rust"}
+    choices := c.Checklist(languages,
+        "What are your favourite programming languages ?", nil)
+    out := func() []string { ... } // convert index to language 
+    c.Println("Your choices are", strings.Join(out(), ", "))
+}
+```
+Output
+```
+What are your favourite programming languages ?
+    Python
+  ✓ Go
+    Haskell
+ ❯✓ Rust
+
+Your choices are Go, Rust
+```
 
 ### Progress Bar
 Determinate
@@ -261,6 +281,7 @@ ishell is in active development and can still change significantly.
 * [x] Scrollable paged output.
 * [x] Progress bar.
 * [x] Multiple choice prompt.
+* [x] Checklist prompt.
 * [ ] Multiple line progress bars.
 * [ ] Testing, testing, testing.
 

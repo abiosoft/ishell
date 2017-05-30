@@ -454,7 +454,10 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	}
 	defer func() { s.reader.scanner.Config.FuncFilterInputRune = nil }()
 
-	selected := initSelected(init, len(options))
+	var selected []int
+	if multiResults {
+		selected = initSelected(init, len(options))
+	}
 
 	s.ShowPrompt(false)
 	defer s.ShowPrompt(true)
@@ -514,6 +517,9 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	switch lastKey {
 	// Ctrl-c
 	case 3:
+		if multiResults {
+			return []int{}
+		}
 		return []int{-1}
 	}
 	if multiResults {
@@ -524,22 +530,25 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 
 func buildOptionsString(options []string, selected []int, index int) string {
 	str := ""
-	symbol := "❯"
+	symbol := " ❯"
 	if runtime.GOOS == "windows" {
-		symbol = ">"
+		symbol = " >"
 	}
 	for i, opt := range options {
-		mark := " "
+		mark := "  "
+		if selected == nil {
+			mark = " "
+		}
 		for _, s := range selected {
 			if s == i {
-				mark = "+"
+				mark = "✓ "
 			}
 		}
 		if i == index {
-			blue := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-			str += blue(symbol + mark + opt)
+			cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
+			str += cyan(symbol + mark + opt)
 		} else {
-			str += " " + mark + opt
+			str += "  " + mark + opt
 		}
 		if i < len(options)-1 {
 			str += "\n"
