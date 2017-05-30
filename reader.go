@@ -40,14 +40,19 @@ func (s *shellReader) rlPrompt() string {
 	return ""
 }
 
-func (s *shellReader) readPassword() string {
+func (s *shellReader) readPasswordErr() (string, error) {
 	prompt := ""
 	if s.buf.Len() > 0 {
 		prompt = s.buf.String()
 		s.buf.Truncate(0)
 	}
-	password, _ := s.scanner.ReadPassword(prompt)
-	return string(password)
+	password, err := s.scanner.ReadPassword(prompt)
+	return string(password), err
+}
+
+func (s *shellReader) readPassword() string {
+	password, _ := s.readPasswordErr()
+	return password
 }
 
 func (s *shellReader) setMultiMode(use bool) {
