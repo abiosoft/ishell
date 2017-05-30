@@ -19,6 +19,8 @@ type Actions interface {
 	// ReadPassword reads password from standard input without echoing the characters.
 	// Note that this only works as expected when the standard input is a terminal.
 	ReadPassword() string
+	// ReadPasswordErr is ReadPassword but returns error as well
+	ReadPasswordErr() (string, error)
 	// ReadMultiLinesFunc reads multiple lines from standard input. It passes each read line to
 	// f and stops reading when f returns false.
 	ReadMultiLinesFunc(f func(string) bool) string
@@ -76,6 +78,10 @@ func (s *shellActionsImpl) ReadLineErr() (string, error) {
 
 func (s *shellActionsImpl) ReadPassword() string {
 	return s.reader.readPassword()
+}
+
+func (s *shellActionsImpl) ReadPasswordErr() (string, error) {
+	return s.reader.readPasswordErr()
 }
 
 func (s *shellActionsImpl) ReadMultiLinesFunc(f func(string) bool) string {
