@@ -47,10 +47,7 @@ func (s *shellReader) readPasswordErr() (string, error) {
 		s.buf.Truncate(0)
 	}
 	password, err := s.scanner.ReadPassword(prompt)
-	if err != nil {
-		return "", err
-	}
-	return string(password), nil
+	return string(password), err
 }
 
 func (s *shellReader) readPassword() string {
