@@ -478,6 +478,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		s.Print(text)
 	}
 	var lastKey rune
+	refresh := make(chan struct{}, 1)
 	listener := func(line []rune, pos int, key rune) (newline []rune, newPos int, ok bool) {
 		lastKey = key
 		if key == -2 {
@@ -495,31 +496,42 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 				selected = toggle(selected, cur)
 			}
 		}
-		update()
+		refresh <- struct{}{}
 		return
 	}
 	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
 	defer func() { s.reader.scanner.Config.Listener = nil }()
 
+	stop := make(chan struct{})
+	defer func() {
+		stop <- struct{}{}
+		s.Println()
+		s.Println(buildOptionsString(options, selected, cur))
+		s.Println()
+	}()
 	// delay a bit before printing
 	// TODO this works but there may be better way
+	t := time.NewTicker(time.Millisecond * 200)
+	defer t.Stop()
 	go func() {
-		time.Sleep(time.Millisecond * 200)
-		update()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-refresh:
+				update()
+			case <-t.C:
+				update()
+			}
+		}
 	}()
 	s.ReadLine()
-	s.Println()
-	s.Println(buildOptionsString(options, selected, cur))
-	s.Println()
 
 	// only handles Ctrl-c for now
 	// this can be broaden later
 	switch lastKey {
 	// Ctrl-c
 	case 3:
-		if multiResults {
-			return []int{}
-		}
 		return []int{-1}
 	}
 	if multiResults {
