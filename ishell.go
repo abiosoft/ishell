@@ -496,9 +496,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 				selected = toggle(selected, cur)
 			}
 		}
-		select {
-		case refresh <- struct{}{}:
-		}
+		refresh <- struct{}{}
 		return
 	}
 	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
