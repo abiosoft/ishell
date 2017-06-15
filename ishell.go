@@ -2,6 +2,7 @@
 package ishell
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
@@ -470,12 +472,36 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	if len(selected) > 0 {
 		cur = selected[len(selected)-1]
 	}
+
+	_, curRow, err := getPosition()
+	if err != nil {
+		return nil
+	}
+
+	_, maxRows, err := readline.GetSize(0)
+	if err != nil {
+		return nil
+	}
+
+	// allocate some space to be at the top of the screen
+	s.Printf("\033[%dS", curRow)
+
+	// move cursor to the top
+	// TODO it happens on every update, however, some trash appears in history without this line
+	s.Print("\033[0;0H")
+
+	offset := 0
+
 	update := func() {
-		s.Println()
-		s.Println(buildOptionsString(options, selected, cur))
-		s.Printf("\033[%dA", len(options)+1)
-		s.Print("\033[2K")
-		s.Print(text)
+		strs := buildOptionsStrings(options, selected, cur)
+		if len(strs) > maxRows-1 {
+			strs = strs[offset : maxRows+offset-1]
+		}
+		s.Print("\033[0;0H")
+		// clear from the cursor to the end of the screen
+		s.Print("\033[0J")
+		s.Println(text)
+		s.Print(strings.Join(strs, "\n"))
 	}
 	var lastKey rune
 	refresh := make(chan struct{}, 1)
@@ -483,12 +509,24 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		lastKey = key
 		if key == -2 {
 			cur++
+			if cur >= maxRows+offset-1 {
+				offset++
+			}
 			if cur >= len(options) {
+				offset = 0
 				cur = 0
 			}
 		} else if key == -1 {
 			cur--
+			if cur < offset {
+				offset--
+			}
 			if cur < 0 {
+				if len(options) > maxRows-1 {
+					offset = len(options) - maxRows + 1
+				} else {
+					offset = 0
+				}
 				cur = len(options) - 1
 			}
 		} else if key == -3 {
@@ -506,11 +544,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	defer func() {
 		stop <- struct{}{}
 		s.Println()
-		s.Println(buildOptionsString(options, selected, cur))
-		s.Println()
 	}()
-	// delay a bit before printing
-	// TODO this works but there may be better way
 	t := time.NewTicker(time.Millisecond * 200)
 	defer t.Stop()
 	go func() {
@@ -521,7 +555,11 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			case <-refresh:
 				update()
 			case <-t.C:
-				update()
+				_, rows, _ := readline.GetSize(0)
+				if maxRows != rows {
+					maxRows = rows
+					update()
+				}
 			}
 		}
 	}()
@@ -540,8 +578,8 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	return []int{cur}
 }
 
-func buildOptionsString(options []string, selected []int, index int) string {
-	str := ""
+func buildOptionsStrings(options []string, selected []int, index int) []string {
+	var strs []string
 	symbol := " ❯"
 	if runtime.GOOS == "windows" {
 		symbol = " >"
@@ -558,15 +596,12 @@ func buildOptionsString(options []string, selected []int, index int) string {
 		}
 		if i == index {
 			cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
-			str += cyan(symbol + mark + opt)
+			strs = append(strs, cyan(symbol+mark+opt))
 		} else {
-			str += "  " + mark + opt
-		}
-		if i < len(options)-1 {
-			str += "\n"
+			strs = append(strs, "  "+mark+opt)
 		}
 	}
-	return str
+	return strs
 }
 
 // IgnoreCase specifies whether commands should not be case sensitive.
@@ -605,4 +640,34 @@ func copyShellProgressBar(s *Shell) ProgressBar {
 	p.Final(sp.final)
 	p.Interval(sp.interval)
 	return p
+}
+
+func getPosition() (int, int, error) {
+	state, err := readline.MakeRaw(0)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer readline.Restore(0, state)
+	fmt.Printf("\033[6n")
+	var out string
+	reader := bufio.NewReader(os.Stdin)
+	if err != nil {
+		return 0, 0, err
+	}
+	for {
+		b, err := reader.ReadByte()
+		if err != nil || b == 'R' {
+			break
+		}
+		if unicode.IsPrint(rune(b)) {
+			out += string(b)
+		}
+	}
+	var row, col int
+	_, err = fmt.Sscanf(out, "[%d;%d", &row, &col)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return col, row, nil
 }
