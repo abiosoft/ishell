@@ -543,6 +543,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	stop := make(chan struct{})
 	defer func() {
 		stop <- struct{}{}
+		s.Println()
 	}()
 	t := time.NewTicker(time.Millisecond * 200)
 	defer t.Stop()
