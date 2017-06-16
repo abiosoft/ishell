@@ -585,13 +585,13 @@ func buildOptionsStrings(options []string, selected []int, index int) []string {
 		symbol = " >"
 	}
 	for i, opt := range options {
-		mark := "  "
+		mark := "⬡ "
 		if selected == nil {
 			mark = " "
 		}
 		for _, s := range selected {
 			if s == i {
-				mark = "✓ "
+				mark = "⬢ "
 			}
 		}
 		if i == index {
