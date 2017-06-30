@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-
-	"github.com/chzyer/readline"
 )
 
 // Actions are actions that can be performed by a shell.
@@ -161,11 +159,6 @@ func (s *shellActionsImpl) Stop() {
 
 func (s *shellActionsImpl) HelpText() string {
 	return s.rootCmd.HelpText()
-}
-
-func clearScreen(s *Shell) error {
-	_, err := readline.ClearScreen(s.writer)
-	return err
 }
 
 func showPaged(s *Shell, text string) error {
