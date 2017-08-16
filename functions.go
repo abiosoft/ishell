@@ -35,15 +35,13 @@ func addDefaultFuncs(s *Shell) {
 		Help: "clear the screen",
 		Func: clearFunc,
 	})
-	s.Interrupt(interruptFunc(s))
+	s.Interrupt(interruptFunc)
 }
 
-func interruptFunc(s *Shell) func(int, *Context) {
-	return func(count int, c *Context) {
-		if count >= 2 {
-			c.Println("Interrupted")
-			os.Exit(1)
-		}
-		c.Println("Input Ctrl-c once more to exit")
+func interruptFunc(c *Context, count int, line string) {
+	if count >= 2 {
+		c.Println("Interrupted")
+		os.Exit(1)
 	}
+	c.Println("Input Ctrl-c once more to exit")
 }

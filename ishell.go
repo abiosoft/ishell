@@ -35,7 +35,7 @@ var (
 type Shell struct {
 	rootCmd           *Cmd
 	generic           func(*Context)
-	interrupt         func(int, *Context)
+	interrupt         func(*Context, int, string)
 	interruptCount    int
 	eof               func(*Context)
 	reader            *shellReader
@@ -219,7 +219,7 @@ func handleInterrupt(s *Shell, line []string) error {
 	}
 	c := newContext(s, nil, line)
 	s.interruptCount++
-	s.interrupt(s.interruptCount, c)
+	s.interrupt(c, s.interruptCount, strings.Join(line, " "))
 	return c.err
 }
 
@@ -373,7 +373,7 @@ func (s *Shell) AutoHelp(enable bool) {
 // Interrupt adds a function to handle keyboard interrupt (Ctrl-c).
 // count is the number of consecutive times that Ctrl-c has been pressed.
 // i.e. any input apart from Ctrl-c resets count to 0.
-func (s *Shell) Interrupt(f func(count int, c *Context)) {
+func (s *Shell) Interrupt(f func(c *Context, count int, input string)) {
 	s.interrupt = f
 }
 
