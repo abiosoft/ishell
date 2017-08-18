@@ -40,8 +40,9 @@ func main() {
 
 	// handle "greet".
 	shell.AddCmd(&ishell.Cmd{
-		Name: "greet",
-		Help: "greet user",
+		Name:    "greet",
+		Aliases: []string{"hello", "welcome"},
+		Help:    "greet user",
 		Func: func(c *ishell.Context) {
 			name := "Stranger"
 			if len(c.Args) > 0 {
