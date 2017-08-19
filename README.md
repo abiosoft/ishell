@@ -170,7 +170,7 @@ func(c *ishell.Context) {
     languages := []string{"Python", "Go", "Haskell", "Rust"}
     choices := c.Checklist(languages,
         "What are your favourite programming languages ?", nil)
-    out := func() []string { ... } // convert index to language 
+    out := func() []string { ... } // convert index to language
     c.Println("Your choices are", strings.Join(out(), ", "))
 }
 ```
@@ -282,6 +282,7 @@ ishell is in active development and can still change significantly.
 * [x] Progress bar.
 * [x] Multiple choice prompt.
 * [x] Checklist prompt.
+* [x] Support for command aliases.
 * [ ] Multiple line progress bars.
 * [ ] Testing, testing, testing.
 
