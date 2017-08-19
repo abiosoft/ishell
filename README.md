@@ -13,7 +13,6 @@ However, you are advised to upgrade.
 
 ## Usage
 
-
 ```go
 import "strings"
 import "github.com/abiosoft/ishell"
@@ -56,7 +55,7 @@ Hello Someone Somewhere
 $
 ```
 
-### Reading input.
+### Reading input
 ```go
 // simulate an authentication
 shell.AddCmd(&ishell.Cmd{
@@ -89,7 +88,7 @@ Password:
 Authentication Successful.
 ```
 
-### Multiline input.
+### Multiline input
 Builtin support for multiple lines.
 ```
 >>> This is \
@@ -123,7 +122,7 @@ You wrote:
 this is user defined
 multiline input;
 ```
-### Keyboard interrupt.
+### Keyboard interrupt
 Builtin interrupt handler.
 ```
 >>> ^C
@@ -227,7 +226,7 @@ func(c *Context) { c.ProgressBar().Display(display) ... }
 ishell.ProgressBar().Display(display)
 ```
 
-### Durable history.
+### Durable history
 ```go
 // Read and write history to $HOME/.ishell_history
 shell.SetHomeHistoryPath(".ishell_history")
@@ -273,18 +272,18 @@ go run example/main.go
 ishell is in active development and can still change significantly.
 
 ## Roadmap (in no particular order)
-* [x] Multiline inputs.
-* [x] Command history.
-* [x] Customizable tab completion.
-* [x] Handle ^C interrupts.
-* [x] Subcommands and help texts.
-* [x] Scrollable paged output.
-* [x] Progress bar.
-* [x] Multiple choice prompt.
-* [x] Checklist prompt.
-* [x] Support for command aliases.
-* [ ] Multiple line progress bars.
-* [ ] Testing, testing, testing.
+* [x] Multiline inputs
+* [x] Command history
+* [x] Customizable tab completion
+* [x] Handle ^C interrupts
+* [x] Subcommands and help texts
+* [x] Scrollable paged output
+* [x] Progress bar
+* [x] Multiple choice prompt
+* [x] Checklist prompt
+* [x] Support for command aliases
+* [ ] Multiple line progress bars
+* [ ] Testing, testing, testing
 
 ## Contribution
 1. Create an issue to discuss it.
