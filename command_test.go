@@ -35,19 +35,19 @@ func TestFindCmd(t *testing.T) {
 	cmd.AddCmd(newCmd("child2", ""))
 	res, err := cmd.FindCmd([]string{"child1"})
 	if err != nil {
-		t.Error("finding should work")
+		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child1")
 
 	res, err = cmd.FindCmd([]string{"child2"})
 	if err != nil {
-		t.Error("finding should work")
+		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child2")
 
 	res, err = cmd.FindCmd([]string{"child3"})
 	if err == nil {
-		t.Error("should not find this child!")
+		t.Fatal("should not find this child!")
 	}
 	assert.Nil(t, res)
 }
