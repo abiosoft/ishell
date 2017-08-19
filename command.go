@@ -11,6 +11,8 @@ import (
 type Cmd struct {
 	// Command name.
 	Name string
+	// Command name aliases.
+	Aliases []string
 	// Function to execute for the command.
 	Func func(c *Context)
 	// One liner help message for the command.
@@ -91,12 +93,31 @@ func (c Cmd) HelpText() string {
 	return b.String()
 }
 
+// findChildCmd returns the subcommand with matching name or alias.
+func (c *Cmd) findChildCmd(name string) *Cmd {
+	// find perfect matches first
+	if cmd, ok := c.children[name]; ok {
+		return cmd
+	}
+
+	// find alias matching the name
+	for _, cmd := range c.children {
+		for _, alias := range cmd.Aliases {
+			if alias == name {
+				return cmd
+			}
+		}
+	}
+
+	return nil
+}
+
 // FindCmd finds the matching Cmd for args.
 // It returns the Cmd and the remaining args.
 func (c Cmd) FindCmd(args []string) (*Cmd, []string) {
 	var cmd *Cmd
 	for i, arg := range args {
-		if cmd1, ok := c.children[arg]; ok {
+		if cmd1 := c.findChildCmd(arg); cmd1 != nil {
 			cmd = cmd1
 			c = *cmd
 			continue
