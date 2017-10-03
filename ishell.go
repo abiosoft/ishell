@@ -332,7 +332,7 @@ func (s *Shell) initCompleters() {
 }
 
 func (s *Shell) setCompleter(completer readline.AutoCompleter) {
-	config := s.reader.scanner.Config
+	config := s.reader.scanner.Config.Clone()
 	config.AutoComplete = completer
 	s.reader.scanner.SetConfig(config)
 }
@@ -439,10 +439,11 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 	s.multiChoiceActive = true
 	defer func() { s.multiChoiceActive = false }()
 
-	s.reader.scanner.Config.DisableAutoSaveHistory = true
-	defer func() { s.reader.scanner.Config.DisableAutoSaveHistory = false }()
+	conf := s.reader.scanner.Config.Clone()
 
-	s.reader.scanner.Config.FuncFilterInputRune = func(r rune) (rune, bool) {
+	conf.DisableAutoSaveHistory = true
+
+	conf.FuncFilterInputRune = func(r rune) (rune, bool) {
 		switch r {
 		case 16:
 			return -1, true
@@ -454,7 +455,6 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		}
 		return r, true
 	}
-	defer func() { s.reader.scanner.Config.FuncFilterInputRune = nil }()
 
 	var selected []int
 	if multiResults {
@@ -537,8 +537,8 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		refresh <- struct{}{}
 		return
 	}
-	s.reader.scanner.Config.Listener = readline.FuncListener(listener)
-	defer func() { s.reader.scanner.Config.Listener = nil }()
+	conf.Listener = readline.FuncListener(listener)
+	oldconf := s.reader.scanner.SetConfig(conf)
 
 	stop := make(chan struct{})
 	defer func() {
@@ -564,6 +564,8 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		}
 	}()
 	s.ReadLine()
+
+	s.reader.scanner.SetConfig(oldconf)
 
 	// only handles Ctrl-c for now
 	// this can be broaden later
