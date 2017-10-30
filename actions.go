@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"github.com/fatih/color"
 )
 
 // Actions are actions that can be performed by a shell.
@@ -32,6 +33,12 @@ type Actions interface {
 	Print(val ...interface{})
 	// Printf prints to output using string format.
 	Printf(format string, val ...interface{})
+	// ColorPrintln prints to output with color and ends with newline character.
+	ColorPrintln(c *color.Color, val ...interface{})
+	// Print prints to output with color.
+	ColorPrint(c *color.Color, val ...interface{})
+	// Printf prints to output with color using string format.
+	ColorPrintf(c *color.Color, format string, val ...interface{})
 	// ShowPaged shows a paged text that is scrollable.
 	// This leverages on "less" for unix and "more" for windows.
 	ShowPaged(text string) error
@@ -114,6 +121,23 @@ func (s *shellActionsImpl) Printf(format string, val ...interface{}) {
 	s.reader.buf.Truncate(0)
 	fmt.Fprintf(s.reader.buf, format, val...)
 	fmt.Fprintf(s.writer, format, val...)
+}
+
+func (s *shellActionsImpl) ColorPrintln(c *color.Color, val ...interface{}) {
+	s.reader.buf.Truncate(0)
+	c.Fprintln(s.writer, val...)
+}
+
+func (s *shellActionsImpl) ColorPrint(c *color.Color, val ...interface{}) {
+	s.reader.buf.Truncate(0)
+	c.Fprint(s.reader.buf, val...)
+	c.Fprint(s.writer, val...)
+}
+
+func (s *shellActionsImpl) ColorPrintf(c *color.Color, format string, val ...interface{}) {
+	s.reader.buf.Truncate(0)
+	c.Fprintf(s.reader.buf, format, val...)
+	c.Fprintf(s.writer, format, val...)
 }
 
 func (s *shellActionsImpl) MultiChoice(options []string, text string) int {
