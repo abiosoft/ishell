@@ -44,6 +44,14 @@ func (c *Context) Del(key string) {
 	delete(c.values, key)
 }
 
+// Keys returns all keys in the context.
+func (c *Context) Keys() (keys []string) {
+	for key := range c.values {
+		keys = append(keys, key)
+	}
+	return
+}
+
 // ProgressBar returns the progress bar for the current shell context.
 func (c *Context) ProgressBar() ProgressBar {
 	return c.progressBar
