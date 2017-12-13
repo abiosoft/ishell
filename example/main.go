@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/abiosoft/ishell"
+	"github.com/fatih/color"
 )
 
 func main() {
@@ -187,6 +188,19 @@ This is another line of it.
 				lines += fmt.Sprintf(line, i+1)
 			}
 			c.ShowPaged(lines)
+		},
+	})
+
+	cyan := color.New(color.FgCyan).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	boldRed := color.New(color.FgRed, color.Bold).SprintFunc()
+	shell.AddCmd(&ishell.Cmd{
+		Name: "color",
+		Help: "color print",
+		Func: func(c *ishell.Context) {
+			c.Print(cyan("cyan\n"))
+			c.Println(yellow("yellow"))
+			c.Printf("%s\n", boldRed("bold red"))
 		},
 	})
 

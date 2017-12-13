@@ -257,6 +257,22 @@ Hello Someusername
 ```
 
 
+### Output with Color
+You can use [fatih/color](https://github.com/fatih/color).
+
+```go
+func(c *ishell.Context) {
+    yellow := color.New(color.FgYellow).SprintFunc()
+    c.Println(yellow("This line is yellow"))
+}
+```
+Execution
+```sh
+>>> color
+This line is yellow
+```
+
+
 ### Example
 Available [here](https://github.com/abiosoft/ishell/blob/master/example/main.go).
 ```sh
