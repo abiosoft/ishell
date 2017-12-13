@@ -257,21 +257,19 @@ Hello Someusername
 ```
 
 
-### Output with Color and Bold letters
-If you want to change the output such as coloring and bold letters, you can do as follows(example is using [fatih/color](https://github.com/fatih/color)).
+### Output with Color
+You can use [fatih/color](https://github.com/fatih/color).
 
 ```go
 func(c *ishell.Context) {
     yellow := color.New(color.FgYellow).SprintFunc()
-    c.Println(yellow("yellow"))
+    c.Println(yellow("This line is yellow"))
 }
 ```
 Execution
-```bash
+```sh
 >>> color
-cyan
-yellow
-bold red
+This line is yellow
 ```
 
 
