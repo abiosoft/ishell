@@ -261,30 +261,17 @@ Hello Someusername
 If you want to change the output such as coloring and bold letters, you can do as follows(example is using [fatih/color](https://github.com/fatih/color)).
 
 ```go
-import "github.com/fatih/color"
-
-cyan := color.New(color.FgCyan).SprintFunc()
-yellow := color.New(color.FgYellow).SprintFunc()
-boldRed := color.New(color.FgRed, color.Bold).SprintFunc()
-shell.AddCmd(&ishell.Cmd{
-    Name: "color",
-    Help: "color print",
-    Func: func(c *ishell.Context) {
-        c.Print(cyan("cyan\n"))
-        c.Println(yellow("yellow"))
-        c.Printf("%s\n", boldRed("bold red"))
-    },
+func(c *ishell.Context) {
+    yellow := color.New(color.FgYellow).SprintFunc()
+    c.Println(yellow("yellow"))
 }
 ```
-Output
+Execution
 ```bash
-$ go run main.go
-Sample Interactive Shell
 >>> color
 cyan
 yellow
 bold red
->>>
 ```
 
 
