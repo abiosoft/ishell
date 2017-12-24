@@ -158,7 +158,7 @@ Output
 What are Go programmers called ?
   Golangers
   Go programmers
-❯ Gophers
+> Gophers
   Goers
 
 You got it!
@@ -179,7 +179,7 @@ What are your favourite programming languages ?
     Python
   ✓ Go
     Haskell
- ❯✓ Rust
+ >✓ Rust
 
 Your choices are Go, Rust
 ```
@@ -317,5 +317,6 @@ Library | Use
 
 ## Donate
 ```
-bitcoin:1GTHYEDiy2C7RzXn5nY4wVRaEN2GvLjwZN
+bitcoin :1GTHYEDiy2C7RzXn5nY4wVRaEN2GvLjwZN
+paypal: a@abiosoft.com
 ```
