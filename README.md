@@ -317,6 +317,6 @@ Library | Use
 
 ## Donate
 ```
-bitcoin :1GTHYEDiy2C7RzXn5nY4wVRaEN2GvLjwZN
+bitcoin: 1GTHYEDiy2C7RzXn5nY4wVRaEN2GvLjwZN
 paypal: a@abiosoft.com
 ```
