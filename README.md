@@ -9,7 +9,7 @@ The current master is not backward compatible with older version. Kindly change 
 
 Older version of this library is still available at [https://gopkg.in/abiosoft/ishell.v1](https://gopkg.in/abiosoft/ishell.v1).
 
-However, you are advised to upgrade.
+However, you are advised to upgrade to v2 [https://gopkg.in/abiosoft/ishell.v2](https://gopkg.in/abiosoft/ishell.v2).
 
 ## Usage
 
