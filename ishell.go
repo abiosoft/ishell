@@ -47,10 +47,10 @@ type Shell struct {
 	multiChoiceActive bool
 	haltChan          chan struct{}
 	historyFile       string
-	contextValues     map[string]interface{}
 	autoHelp          bool
 	rawArgs           []string
 	progressBar       ProgressBar
+	contextValues
 	Actions
 }
 
@@ -624,11 +624,17 @@ func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 	}
 	return &Context{
 		Actions:     s.Actions,
-		values:      s.contextValues,
 		progressBar: copyShellProgressBar(s),
 		Args:        args,
 		RawArgs:     s.rawArgs,
 		Cmd:         *cmd,
+		contextValues: func() contextValues {
+			values := contextValues{}
+			for k := range s.contextValues {
+				values[k] = s.contextValues[k]
+			}
+			return values
+		}(),
 	}
 }
 
