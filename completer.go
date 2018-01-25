@@ -50,7 +50,7 @@ func (ic iCompleter) getWords(w []string) (s []string) {
 		cmd, args = ic.cmd, w
 	}
 	if cmd.Completer != nil {
-		return cmd.Completer(args)
+		s = append(s, cmd.Completer(args)...)
 	}
 	for k := range cmd.children {
 		s = append(s, k)
