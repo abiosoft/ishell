@@ -533,12 +533,16 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			if multiResults {
 				selected = toggle(selected, cur)
 			}
+		} else {
+			return
 		}
 		refresh <- struct{}{}
 		return
 	}
 	conf.Listener = readline.FuncListener(listener)
 	oldconf := s.reader.scanner.SetConfig(conf)
+
+	update()
 
 	stop := make(chan struct{})
 	defer func() {
