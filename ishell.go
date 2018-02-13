@@ -545,6 +545,15 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		return nil
 	}
 
+	stdoutFd := int(os.Stdout.Fd())
+	_, maxRows, err := readline.GetSize(stdoutFd)
+	if err != nil {
+		return nil
+	}
+
+	// allocate some space to be at the top of the screen
+	s.Printf("\033[%dS", curRow)
+
 	// move cursor to the top
 	// TODO it happens on every update, however, some trash appears in history without this line
 	s.Print("\033[0;0H")
@@ -618,7 +627,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			case <-refresh:
 				update()
 			case <-t.C:
-				_, rows, _ := readline.GetSize(fd)
+				_, rows, _ := readline.GetSize(stdoutFd)
 				if maxRows != rows {
 					maxRows = rows
 					update()
