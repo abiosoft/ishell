@@ -163,11 +163,16 @@ func (s *shellActionsImpl) HelpText() string {
 
 func showPaged(s *Shell, text string) error {
 	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("more")
-	} else {
-		cmd = exec.Command("less")
+
+	if s.pager == "" {
+		if runtime.GOOS == "windows" {
+			s.pager = "more"
+		} else {
+			s.pager = "less"
+		}
 	}
+
+	cmd = exec.Command(s.pager, s.pagerArgs...)
 	cmd.Stdout = s.writer
 	cmd.Stderr = s.writer
 	cmd.Stdin = bytes.NewBufferString(text)

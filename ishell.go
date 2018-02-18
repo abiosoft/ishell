@@ -50,6 +50,8 @@ type Shell struct {
 	autoHelp          bool
 	rawArgs           []string
 	progressBar       ProgressBar
+	pager             string
+	pagerArgs         []string
 	contextValues
 	Actions
 }
@@ -408,6 +410,12 @@ func (s *Shell) SetHomeHistoryPath(path string) {
 // SetOut sets the writer to write outputs to.
 func (s *Shell) SetOut(writer io.Writer) {
 	s.writer = writer
+}
+
+// SetPager sets the pager and its arguments for paged output
+func (s *Shell) SetPager(pager string, args []string) {
+	s.pager = pager
+	s.pagerArgs = args
 }
 
 func initSelected(init []int, max int) []int {
