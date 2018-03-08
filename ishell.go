@@ -486,7 +486,8 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		return nil
 	}
 
-	_, maxRows, err := readline.GetSize(0)
+	stdoutFd := int(os.Stdout.Fd())
+	_, maxRows, err := readline.GetSize(stdoutFd)
 	if err != nil {
 		return nil
 	}
@@ -541,12 +542,16 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			if multiResults {
 				selected = toggle(selected, cur)
 			}
+		} else {
+			return
 		}
 		refresh <- struct{}{}
 		return
 	}
 	conf.Listener = readline.FuncListener(listener)
 	oldconf := s.reader.scanner.SetConfig(conf)
+
+	update()
 
 	stop := make(chan struct{})
 	defer func() {
@@ -563,7 +568,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			case <-refresh:
 				update()
 			case <-t.C:
-				_, rows, _ := readline.GetSize(0)
+				_, rows, _ := readline.GetSize(stdoutFd)
 				if maxRows != rows {
 					maxRows = rows
 					update()
