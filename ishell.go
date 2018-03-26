@@ -18,7 +18,7 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
-	"github.com/flynn-archive/go-shlex"
+	"github.com/GetStream/go-shlex"
 )
 
 const (
