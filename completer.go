@@ -25,7 +25,7 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 
 	var cWords []string
 	prefix := ""
-	if len(words) > 0 && line[pos-1] != ' ' {
+	if len(words) > 0 && pos > 0 && line[pos-1] != ' ' {
 		prefix = words[len(words)-1]
 		cWords = ic.getWords(words[:len(words)-1])
 	} else {
