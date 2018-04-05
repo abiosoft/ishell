@@ -481,24 +481,17 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 		cur = selected[len(selected)-1]
 	}
 
-	_, curRow, err := getPosition()
+	fd := int(os.Stdout.Fd())
+	_, maxRows, err := readline.GetSize(fd)
 	if err != nil {
 		return nil
 	}
-
-	_, maxRows, err := readline.GetSize(0)
-	if err != nil {
-		return nil
-	}
-
-	// allocate some space to be at the top of the screen
-	s.Printf("\033[%dS", curRow)
 
 	// move cursor to the top
 	// TODO it happens on every update, however, some trash appears in history without this line
 	s.Print("\033[0;0H")
 
-	offset := 0
+	offset := fd
 
 	update := func() {
 		strs := buildOptionsStrings(options, selected, cur)
@@ -521,7 +514,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 				offset++
 			}
 			if cur >= len(options) {
-				offset = 0
+				offset = fd
 				cur = 0
 			}
 		} else if key == -1 {
@@ -533,7 +526,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 				if len(options) > maxRows-1 {
 					offset = len(options) - maxRows + 1
 				} else {
-					offset = 0
+					offset = fd
 				}
 				cur = len(options) - 1
 			}
@@ -563,7 +556,7 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 			case <-refresh:
 				update()
 			case <-t.C:
-				_, rows, _ := readline.GetSize(0)
+				_, rows, _ := readline.GetSize(fd)
 				if maxRows != rows {
 					maxRows = rows
 					update()
@@ -659,11 +652,12 @@ func copyShellProgressBar(s *Shell) ProgressBar {
 }
 
 func getPosition() (int, int, error) {
-	state, err := readline.MakeRaw(0)
+	fd := int(os.Stdout.Fd())
+	state, err := readline.MakeRaw(fd)
 	if err != nil {
 		return 0, 0, err
 	}
-	defer readline.Restore(0, state)
+	defer readline.Restore(fd, state)
 	fmt.Printf("\033[6n")
 	var out string
 	reader := bufio.NewReader(os.Stdin)
