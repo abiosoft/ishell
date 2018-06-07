@@ -16,7 +16,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/chzyer/readline"
+	"github.com/abiosoft/readline"
 	"github.com/fatih/color"
 	"github.com/flynn-archive/go-shlex"
 )

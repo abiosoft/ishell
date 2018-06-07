@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chzyer/readline"
+	"github.com/abiosoft/readline"
 )
 
 type (
