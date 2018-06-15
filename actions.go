@@ -35,6 +35,11 @@ type Actions interface {
 	// ShowPaged shows a paged text that is scrollable.
 	// This leverages on "less" for unix and "more" for windows.
 	ShowPaged(text string) error
+	// Wait for an answer from user
+	// text is displayed before
+	Ask(text string) string
+	// AskErr is Ask but returns error as well
+	AskErr(text string) (string, error)
 	// MultiChoice presents options to the user.
 	// returns the index of the selection or -1 if nothing is
 	// selected.
@@ -114,6 +119,15 @@ func (s *shellActionsImpl) Printf(format string, val ...interface{}) {
 	s.reader.buf.Truncate(0)
 	fmt.Fprintf(s.reader.buf, format, val...)
 	fmt.Fprintf(s.writer, format, val...)
+}
+
+func (s *shellActionsImpl) Ask(text string) string {
+	line, _ := s.ask(text)
+	return line
+}
+
+func (s *shellActionsImpl) AskErr(text string) (string, error) {
+	return s.ask(text)
 }
 
 func (s *shellActionsImpl) MultiChoice(options []string, text string) int {

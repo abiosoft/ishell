@@ -443,6 +443,22 @@ func toggle(selected []int, cur int) []int {
 	return append(selected, cur)
 }
 
+func (s *Shell) ask(text string) (string, error) {
+	conf := s.reader.scanner.Config.Clone()
+
+	conf.DisableAutoSaveHistory = true
+
+	s.ShowPrompt(false)
+	defer s.ShowPrompt(true)
+	oldconf := s.reader.scanner.SetConfig(conf)
+
+	s.Print(text + " ")
+	answer, err := s.ReadLineErr()
+
+	s.reader.scanner.SetConfig(oldconf)
+	return answer, err
+}
+
 func (s *Shell) multiChoice(options []string, text string, init []int, multiResults bool) []int {
 	s.multiChoiceActive = true
 	defer func() { s.multiChoiceActive = false }()
