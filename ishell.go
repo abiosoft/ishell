@@ -18,7 +18,7 @@ import (
 
 	"github.com/abiosoft/readline"
 	"github.com/fatih/color"
-	"github.com/flynn-archive/go-shlex"
+	"github.com/GetStream/go-shlex"
 )
 
 const (
