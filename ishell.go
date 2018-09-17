@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	defaultPrompt      = "<<> "
+	defaultPrompt      = ">>> "
 	defaultMultiPrompt = "... "
 )
 

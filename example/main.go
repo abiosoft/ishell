@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"ishell"
+	"githib.com/abiosoft/ishell"
 	"github.com/fatih/color"
 )
 
