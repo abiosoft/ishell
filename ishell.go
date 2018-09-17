@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/abiosoft/readline"
 	"github.com/fatih/color"
@@ -22,13 +23,18 @@ import (
 )
 
 const (
-	defaultPrompt      = ">>> "
+	defaultPrompt      = "<<> "
 	defaultMultiPrompt = "... "
 )
 
 var (
 	errNoHandler          = errors.New("incorrect input, try 'help'")
 	errNoInterruptHandler = errors.New("no interrupt handler")
+    strMultiChoice = " ❯"
+    strMultiChoiceWin = " >"
+    strMultiChoiceSpacer = " "
+    strMultiChoiceOpen = "⬡ "
+    strMultiChoiceSelect = "⬢ "
 )
 
 // Shell is an interactive cli shell.
@@ -583,25 +589,25 @@ func (s *Shell) multiChoice(options []string, text string, init []int, multiResu
 
 func buildOptionsStrings(options []string, selected []int, index int) []string {
 	var strs []string
-	symbol := " ❯"
+	symbol := strMultiChoice
 	if runtime.GOOS == "windows" {
-		symbol = " >"
+		symbol = strMultiChoiceWin
 	}
 	for i, opt := range options {
-		mark := "⬡ "
+		mark := strMultiChoiceOpen
 		if selected == nil {
-			mark = " "
+			mark = strMultiChoiceSpacer
 		}
 		for _, s := range selected {
 			if s == i {
-				mark = "⬢ "
+				mark = strMultiChoiceSelect
 			}
 		}
 		if i == index {
 			cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
 			strs = append(strs, cyan(symbol+mark+opt))
 		} else {
-			strs = append(strs, "  "+mark+opt)
+			strs = append(strs, strings.Repeat(" ",utf8.RuneCountInString(symbol))+mark+opt)
 		}
 	}
 	return strs

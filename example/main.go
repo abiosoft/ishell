@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/abiosoft/ishell"
+	"ishell"
 	"github.com/fatih/color"
 )
 
@@ -17,7 +17,11 @@ func main() {
 	// display info.
 	shell.Println("Sample Interactive Shell")
 
-	// handle login.
+    //Consider the unicode characters supported by the users font
+    //shell.SetMultiChoicePrompt(" >>"," - ")
+    //shell.SetChecklistOptions("[ ] ","[X] ")
+
+    // handle login.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "login",
 		Func: func(c *ishell.Context) {
