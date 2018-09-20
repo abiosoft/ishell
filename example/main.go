@@ -21,7 +21,7 @@ func main() {
 	//shell.SetMultiChoicePrompt(" >>"," - ")
 	//shell.SetChecklistOptions("[ ] ","[X] ")
 
-    // handle login.
+	// handle login.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "login",
 		Func: func(c *ishell.Context) {
