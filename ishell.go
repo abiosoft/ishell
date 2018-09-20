@@ -30,11 +30,11 @@ const (
 var (
 	errNoHandler          = errors.New("incorrect input, try 'help'")
 	errNoInterruptHandler = errors.New("no interrupt handler")
-    strMultiChoice = " ❯"
-    strMultiChoiceWin = " >"
-    strMultiChoiceSpacer = " "
-    strMultiChoiceOpen = "⬡ "
-    strMultiChoiceSelect = "⬢ "
+	strMultiChoice = " ❯"
+	strMultiChoiceWin = " >"
+	strMultiChoiceSpacer = " "
+	strMultiChoiceOpen = "⬡ "
+	strMultiChoiceSelect = "⬢ "
 )
 
 // Shell is an interactive cli shell.
