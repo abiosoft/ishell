@@ -1,9 +1,8 @@
 language: go
 script:
   - go vet
+  - gofmt -l .
   - go test -v ./...
   - go build
 go:
-  - 1.6.x
-  - 1.7.x
-  - 1.8.x
+  - 1.10.x
