@@ -17,6 +17,10 @@ func main() {
 	// display info.
 	shell.Println("Sample Interactive Shell")
 
+	//Consider the unicode characters supported by the users font
+	//shell.SetMultiChoicePrompt(" >>"," - ")
+	//shell.SetChecklistOptions("[ ] ","[X] ")
+
 	// handle login.
 	shell.AddCmd(&ishell.Cmd{
 		Name: "login",
