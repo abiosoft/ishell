@@ -30,11 +30,11 @@ const (
 var (
 	errNoHandler          = errors.New("incorrect input, try 'help'")
 	errNoInterruptHandler = errors.New("no interrupt handler")
-	strMultiChoice = " ❯"
-	strMultiChoiceWin = " >"
-	strMultiChoiceSpacer = " "
-	strMultiChoiceOpen = "⬡ "
-	strMultiChoiceSelect = "⬢ "
+	strMultiChoice        = " ❯"
+	strMultiChoiceWin     = " >"
+	strMultiChoiceSpacer  = " "
+	strMultiChoiceOpen    = "⬡ "
+	strMultiChoiceSelect  = "⬢ "
 )
 
 // Shell is an interactive cli shell.
@@ -607,7 +607,7 @@ func buildOptionsStrings(options []string, selected []int, index int) []string {
 			cyan := color.New(color.FgCyan).Add(color.Bold).SprintFunc()
 			strs = append(strs, cyan(symbol+mark+opt))
 		} else {
-			strs = append(strs, strings.Repeat(" ",utf8.RuneCountInString(symbol))+mark+opt)
+			strs = append(strs, strings.Repeat(" ", utf8.RuneCountInString(symbol))+mark+opt)
 		}
 	}
 	return strs
