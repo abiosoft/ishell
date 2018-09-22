@@ -1,7 +1,7 @@
 language: go
 script:
   - go vet
-  - gofmt -l .
+  - test -z $(gofmt -l .)
   - go test -v ./...
   - go build
 go:
