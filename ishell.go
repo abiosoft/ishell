@@ -104,6 +104,16 @@ func (s *Shell) Wait() {
 	<-s.haltChan
 }
 
+// GetRootCmd returns the shell's root command.
+func (s *Shell) GetRootCmd() *Cmd {
+	return s.rootCmd
+}
+
+// SetRootCmd sets the shell's root command.
+func (s *Shell) SetRootCmd(cmd *Cmd) {
+	s.rootCmd = cmd
+}
+
 func (s *Shell) stop() {
 	if !s.Active() {
 		return
