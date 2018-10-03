@@ -155,7 +155,7 @@ func (s *shellActionsImpl) ShowPaged(text string) error {
 }
 
 func (s *shellActionsImpl) ShowPagedReader(r io.Reader) error {
-	return showPagedReader(s.Shell, text)
+	return showPagedReader(s.Shell, r)
 }
 
 func (s *shellActionsImpl) Stop() {
