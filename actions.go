@@ -36,6 +36,9 @@ type Actions interface {
 	// ShowPaged shows a paged text that is scrollable.
 	// This leverages on "less" for unix and "more" for windows.
 	ShowPaged(text string) error
+	// ShowPagedReader shows a paged text that is scrollable, from a reader source.
+	// This leverages on "less" for unix and "more" for windows.
+	ShowPagedReader(text string) error
 	// MultiChoice presents options to the user.
 	// returns the index of the selection or -1 if nothing is
 	// selected.
