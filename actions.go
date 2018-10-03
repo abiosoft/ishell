@@ -38,7 +38,7 @@ type Actions interface {
 	ShowPaged(text string) error
 	// ShowPagedReader shows a paged text that is scrollable, from a reader source.
 	// This leverages on "less" for unix and "more" for windows.
-	ShowPagedReader(text string) error
+	ShowPagedReader(r io.Reader) error
 	// MultiChoice presents options to the user.
 	// returns the index of the selection or -1 if nothing is
 	// selected.
