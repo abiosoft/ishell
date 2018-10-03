@@ -1,8 +1,8 @@
 package ishell
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -35,6 +35,9 @@ type Actions interface {
 	// ShowPaged shows a paged text that is scrollable.
 	// This leverages on "less" for unix and "more" for windows.
 	ShowPaged(text string) error
+	// ShowPagedReader shows a paged text that is scrollable, from a reader source.
+	// This leverages on "less" for unix and "more" for windows.
+	ShowPagedReader(r io.Reader) error
 	// MultiChoice presents options to the user.
 	// returns the index of the selection or -1 if nothing is
 	// selected.
@@ -150,7 +153,11 @@ func (s *shellActionsImpl) ClearScreen() error {
 }
 
 func (s *shellActionsImpl) ShowPaged(text string) error {
-	return showPaged(s.Shell, text)
+	return showPagedReader(s.Shell, strings.NewReader(text))
+}
+
+func (s *shellActionsImpl) ShowPagedReader(r io.Reader) error {
+	return showPagedReader(s.Shell, r)
 }
 
 func (s *shellActionsImpl) Stop() {
@@ -161,7 +168,7 @@ func (s *shellActionsImpl) HelpText() string {
 	return s.rootCmd.HelpText()
 }
 
-func showPaged(s *Shell, text string) error {
+func showPagedReader(s *Shell, r io.Reader) error {
 	var cmd *exec.Cmd
 
 	if s.pager == "" {
@@ -175,6 +182,6 @@ func showPaged(s *Shell, text string) error {
 	cmd = exec.Command(s.pager, s.pagerArgs...)
 	cmd.Stdout = s.writer
 	cmd.Stderr = s.writer
-	cmd.Stdin = bytes.NewBufferString(text)
+	cmd.Stdin = r
 	return cmd.Run()
 }
