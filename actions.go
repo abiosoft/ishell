@@ -3,6 +3,7 @@ package ishell
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -153,6 +154,10 @@ func (s *shellActionsImpl) ShowPaged(text string) error {
 	return showPaged(s.Shell, text)
 }
 
+func (s *shellActionsImpl) ShowPagedReader(r io.Reader) error {
+	return showPagedReader(s.Shell, text)
+}
+
 func (s *shellActionsImpl) Stop() {
 	s.stop()
 }
@@ -176,5 +181,23 @@ func showPaged(s *Shell, text string) error {
 	cmd.Stdout = s.writer
 	cmd.Stderr = s.writer
 	cmd.Stdin = bytes.NewBufferString(text)
+	return cmd.Run()
+}
+
+func showPagedReader(s *Shell, r io.Reader) error {
+	var cmd *exec.Cmd
+
+	if s.pager == "" {
+		if runtime.GOOS == "windows" {
+			s.pager = "more"
+		} else {
+			s.pager = "less"
+		}
+	}
+
+	cmd = exec.Command(s.pager, s.pagerArgs...)
+	cmd.Stdout = s.writer
+	cmd.Stderr = s.writer
+	cmd.Stdin = r
 	return cmd.Run()
 }
