@@ -104,12 +104,13 @@ func (s *Shell) Wait() {
 	<-s.haltChan
 }
 
-// GetRootCmd returns the shell's root command.
-func (s *Shell) GetRootCmd() *Cmd {
+// RootCmd returns the shell's root command.
+func (s *Shell) RootCmd() *Cmd {
 	return s.rootCmd
 }
 
 // SetRootCmd sets the shell's root command.
+// Use with caution, this may affect the behaviour of the default completer.
 func (s *Shell) SetRootCmd(cmd *Cmd) {
 	s.rootCmd = cmd
 }
