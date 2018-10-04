@@ -1,7 +1,6 @@
 package ishell
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
@@ -154,7 +153,7 @@ func (s *shellActionsImpl) ClearScreen() error {
 }
 
 func (s *shellActionsImpl) ShowPaged(text string) error {
-	return showPaged(s.Shell, text)
+	return showPagedReader(s.Shell, strings.NewReader(text))
 }
 
 func (s *shellActionsImpl) ShowPagedReader(r io.Reader) error {
@@ -167,24 +166,6 @@ func (s *shellActionsImpl) Stop() {
 
 func (s *shellActionsImpl) HelpText() string {
 	return s.rootCmd.HelpText()
-}
-
-func showPaged(s *Shell, text string) error {
-	var cmd *exec.Cmd
-
-	if s.pager == "" {
-		if runtime.GOOS == "windows" {
-			s.pager = "more"
-		} else {
-			s.pager = "less"
-		}
-	}
-
-	cmd = exec.Command(s.pager, s.pagerArgs...)
-	cmd.Stdout = s.writer
-	cmd.Stderr = s.writer
-	cmd.Stdin = bytes.NewBufferString(text)
-	return cmd.Run()
 }
 
 func showPagedReader(s *Shell, r io.Reader) error {
