@@ -104,6 +104,11 @@ func (s *Shell) Wait() {
 	<-s.haltChan
 }
 
+// MultiChoiceActive returns true if the shell is in the multi choice selection mode
+func (s *Shell) MultiChoiceActive() bool {
+	return s.multiChoiceActive
+}
+
 // RootCmd returns the shell's root command.
 func (s *Shell) RootCmd() *Cmd {
 	return s.rootCmd
