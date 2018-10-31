@@ -12,6 +12,8 @@ import (
 type Actions interface {
 	// ReadLine reads a line from standard input.
 	ReadLine() string
+	// ReadLineWithDefault reads a line from standard input with default value.
+	ReadLineWithDefault(string) string
 	// ReadLineErr is ReadLine but returns error as well
 	ReadLineErr() (string, error)
 	// ReadPassword reads password from standard input without echoing the characters.
@@ -72,6 +74,12 @@ type shellActionsImpl struct {
 
 // ReadLine reads a line from standard input.
 func (s *shellActionsImpl) ReadLine() string {
+	line, _ := s.readLine()
+	return line
+}
+
+func (s *shellActionsImpl) ReadLineWithDefault(defaultValue string) string {
+	s.reader.defaultValue = defaultValue
 	line, _ := s.readLine()
 	return line
 }
