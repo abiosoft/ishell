@@ -51,6 +51,11 @@ type Actions interface {
 	// SetMultiPrompt sets the prompt string used for multiple lines. The string to be displayed before
 	// the cursor; starting from the second line of input.
 	SetMultiPrompt(prompt string)
+	// SetMultiChoicePrompt sets the prompt strings used for MultiChoice().
+	SetMultiChoicePrompt(prompt, spacer string)
+	// SetChecklistOptions sets the strings representing the options of Checklist().
+	// The generated string depends on SetMultiChoicePrompt() also.
+	SetChecklistOptions(open, selected string)
 	// ShowPrompt sets whether prompt should show when requesting input for ReadLine and ReadPassword.
 	// Defaults to true.
 	ShowPrompt(show bool)
@@ -133,6 +138,15 @@ func (s *shellActionsImpl) SetPrompt(prompt string) {
 
 func (s *shellActionsImpl) SetMultiPrompt(prompt string) {
 	s.reader.multiPrompt = prompt
+}
+
+func (s *shellActionsImpl) SetMultiChoicePrompt(prompt, spacer string) {
+	strMultiChoice = prompt
+	strMultiChoiceSpacer = spacer
+}
+func (s *shellActionsImpl) SetChecklistOptions(open, selected string) {
+	strMultiChoiceOpen = open
+	strMultiChoiceSelect = selected
 }
 
 func (s *shellActionsImpl) ShowPrompt(show bool) {
