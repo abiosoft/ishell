@@ -88,9 +88,9 @@ func (s *shellActionsImpl) ReadLineErr() (string, error) {
 }
 
 func (s *shellActionsImpl) ReadLineWithDefault(defaultValue string) string {
-	s.reader.defaultValue = defaultValue
+	s.reader.defaultInput = defaultValue
 	line, _ := s.readLine()
-	s.reader.defaultValue = ""
+	s.reader.defaultInput = ""
 	return line
 }
 
