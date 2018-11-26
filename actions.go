@@ -14,6 +14,8 @@ type Actions interface {
 	ReadLine() string
 	// ReadLineErr is ReadLine but returns error as well
 	ReadLineErr() (string, error)
+	// ReadLineWithDefault reads a line from standard input with default value.
+	ReadLineWithDefault(string) string
 	// ReadPassword reads password from standard input without echoing the characters.
 	// Note that this only works as expected when the standard input is a terminal.
 	ReadPassword() string
@@ -83,6 +85,13 @@ func (s *shellActionsImpl) ReadLine() string {
 
 func (s *shellActionsImpl) ReadLineErr() (string, error) {
 	return s.readLine()
+}
+
+func (s *shellActionsImpl) ReadLineWithDefault(defaultValue string) string {
+	s.reader.defaultValue = defaultValue
+	line, _ := s.readLine()
+	s.reader.defaultValue = ""
+	return line
 }
 
 func (s *shellActionsImpl) ReadPassword() string {
