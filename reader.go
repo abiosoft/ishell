@@ -24,8 +24,8 @@ type (
 		multiPrompt  string
 		showPrompt   bool
 		completer    readline.AutoCompleter
+		defaultInput string
 		sync.Mutex
-		defaultValue string
 	}
 )
 
@@ -88,7 +88,7 @@ func (s *shellReader) readLine(consumer chan lineString) {
 	// use printed statement as prompt
 	s.scanner.SetPrompt(prompt)
 
-	line, err := s.scanner.ReadlineWithDefault(s.defaultValue)
+	line, err := s.scanner.ReadlineWithDefault(s.defaultInput)
 
 	// reset prompt
 	s.scanner.SetPrompt(shellPrompt)

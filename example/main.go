@@ -57,6 +57,30 @@ func main() {
 		},
 	})
 
+	// handle "default".
+	shell.AddCmd(&ishell.Cmd{
+		Name: "default",
+		Help: "readline with default input",
+		Func: func(c *ishell.Context) {
+			c.ShowPrompt(false)
+			defer c.ShowPrompt(true)
+
+			defaultInput := "default input, you can edit this"
+			if len(c.Args) > 0 {
+				defaultInput = strings.Join(c.Args, " ")
+			}
+
+			c.Print("input: ")
+			read := c.ReadLineWithDefault(defaultInput)
+
+			if read == defaultInput {
+				c.Println("you left the default input intact")
+			} else {
+				c.Printf("you modified input to '%s'", read)
+				c.Println()
+			}
+		},
+	})
 	// read multiple lines with "multi" command
 	shell.AddCmd(&ishell.Cmd{
 		Name: "multi",
