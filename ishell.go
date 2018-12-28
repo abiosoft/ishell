@@ -93,7 +93,7 @@ func NewWithConfig(conf *readline.Config) *Shell {
 	return shell
 }
 
-// NewWithReadline creates a new shell with custom readline instance.
+// NewWithReadline creates a new shell with a custom readline instance.
 func NewWithReadline(rl *readline.Instance) *Shell {
 	shell := &Shell{
 		rootCmd: &Cmd{},
@@ -105,7 +105,7 @@ func NewWithReadline(rl *readline.Instance) *Shell {
 			buf:         &bytes.Buffer{},
 			completer:   readline.NewPrefixCompleter(),
 		},
-		writer:   conf.Stdout,
+		writer:   rl.Config.Stdout,
 		autoHelp: true,
 	}
 	shell.Actions = &shellActionsImpl{Shell: shell}
