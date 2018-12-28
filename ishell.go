@@ -93,6 +93,27 @@ func NewWithConfig(conf *readline.Config) *Shell {
 	return shell
 }
 
+// NewWithReadline creates a new shell with custom readline instance.
+func NewWithReadline(rl *readline.Instance) *Shell {
+	shell := &Shell{
+		rootCmd: &Cmd{},
+		reader: &shellReader{
+			scanner:     rl,
+			prompt:      rl.Config.Prompt,
+			multiPrompt: defaultMultiPrompt,
+			showPrompt:  true,
+			buf:         &bytes.Buffer{},
+			completer:   readline.NewPrefixCompleter(),
+		},
+		writer:   conf.Stdout,
+		autoHelp: true,
+	}
+	shell.Actions = &shellActionsImpl{Shell: shell}
+	shell.progressBar = newProgressBar(shell)
+	addDefaultFuncs(shell)
+	return shell
+}
+
 // Start starts the shell but does not wait for it to stop.
 func (s *Shell) Start() {
 	s.prepareRun()
