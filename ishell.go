@@ -74,6 +74,12 @@ func NewWithConfig(conf *readline.Config) *Shell {
 		log.Println("Shell or operating system not supported.")
 		log.Fatal(err)
 	}
+
+	return NewWithReadline(rl)
+}
+
+// NewWithReadline creates a new shell with a custom readline instance.
+func NewWithReadline(rl *readline.Instance) *Shell {
 	shell := &Shell{
 		rootCmd: &Cmd{},
 		reader: &shellReader{
@@ -84,7 +90,7 @@ func NewWithConfig(conf *readline.Config) *Shell {
 			buf:         &bytes.Buffer{},
 			completer:   readline.NewPrefixCompleter(),
 		},
-		writer:   conf.Stdout,
+		writer:   rl.Config.Stdout,
 		autoHelp: true,
 	}
 	shell.Actions = &shellActionsImpl{Shell: shell}
