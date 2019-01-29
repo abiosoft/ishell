@@ -3,7 +3,7 @@ package ishell
 import (
 	"strings"
 
-	"github.com/flynn-archive/go-shlex"
+	shlex "github.com/flynn-archive/go-shlex"
 )
 
 type iCompleter struct {
@@ -23,14 +23,12 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 		words = strings.Fields(string(line))
 	}
 
-	var cWords []string
 	prefix := ""
 	if len(words) > 0 && pos > 0 && line[pos-1] != ' ' {
 		prefix = words[len(words)-1]
-		cWords = ic.getWords(words[:len(words)-1])
-	} else {
-		cWords = ic.getWords(words)
+		words = words[:len(words)-1]
 	}
+	cWords := ic.getWords(words, prefix)
 
 	var suggestions [][]rune
 	for _, w := range cWords {
@@ -44,16 +42,23 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	return suggestions, len(prefix)
 }
 
-func (ic iCompleter) getWords(w []string) (s []string) {
+func (ic iCompleter) getWords(w []string, prefix string) (s []string) {
 	cmd, args := ic.cmd.FindCmd(w)
 	if cmd == nil {
 		cmd, args = ic.cmd, w
 	}
 	if cmd.Completer != nil {
-		return cmd.Completer(args)
+		return cmd.Completer(cmd, args, prefix)
 	}
-	for k := range cmd.children {
+	for k, child := range cmd.children {
 		s = append(s, k)
+
+		// add aliases when command name won't match
+		if !strings.HasPrefix(k, prefix) {
+			for _, a := range child.Aliases {
+				s = append(s, a)
+			}
+		}
 	}
 	return
 }

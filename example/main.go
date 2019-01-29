@@ -195,7 +195,7 @@ This is an example of a long help.`,
 		autoCmd.AddCmd(&ishell.Cmd{
 			Name: "words",
 			Help: "add words with 'suggest add', then tab after typing 'suggest words '",
-			Completer: func([]string) []string {
+			Completer: func(cmd *ishell.Cmd, args []string, prefix string) []string {
 				return words
 			},
 		})
