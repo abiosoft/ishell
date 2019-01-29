@@ -33,19 +33,19 @@ func TestFindCmd(t *testing.T) {
 	cmd := newCmd("root", "")
 	cmd.AddCmd(newCmd("child1", ""))
 	cmd.AddCmd(newCmd("child2", ""))
-	res, err := cmd.FindCmd([]string{"child1"})
+	res, err := cmd.FindCmd([]string{"child1"}, false)
 	if err != nil {
 		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child1")
 
-	res, err = cmd.FindCmd([]string{"child2"})
+	res, err = cmd.FindCmd([]string{"child2"}, false)
 	if err != nil {
 		t.Fatal("finding should work")
 	}
 	assert.Equal(t, res.Name, "child2")
 
-	res, err = cmd.FindCmd([]string{"child3"})
+	res, err = cmd.FindCmd([]string{"child3"}, false)
 	if err == nil {
 		t.Fatal("should not find this child!")
 	}
@@ -58,19 +58,49 @@ func TestFindAlias(t *testing.T) {
 	subcmd.Aliases = []string{"alias1", "alias2"}
 	cmd.AddCmd(subcmd)
 
-	res, err := cmd.FindCmd([]string{"alias1"})
+	res, err := cmd.FindCmd([]string{"alias1"}, false)
 	if err != nil {
 		t.Fatal("finding alias should work")
 	}
 	assert.Equal(t, res.Name, "child1")
 
-	res, err = cmd.FindCmd([]string{"alias2"})
+	res, err = cmd.FindCmd([]string{"alias2"}, false)
 	if err != nil {
 		t.Fatal("finding alias should work")
 	}
 	assert.Equal(t, res.Name, "child1")
 
-	res, err = cmd.FindCmd([]string{"alias3"})
+	res, err = cmd.FindCmd([]string{"alias3"}, false)
+	if err == nil {
+		t.Fatal("should not find this child!")
+	}
+	assert.Nil(t, res)
+}
+
+func TestFindCmdPrefix(t *testing.T) {
+	cmd := newCmd("root", "")
+	cmd.AddCmd(newCmd("cmdone", ""))
+	cmd.AddCmd(newCmd("cmdtwo", ""))
+
+	res, err := cmd.FindCmd([]string{"cmdo"}, true)
+	if err != nil {
+		t.Fatal("finding should work")
+	}
+	assert.Equal(t, res.Name, "cmdone")
+
+	res, err = cmd.FindCmd([]string{"cmdt"}, true)
+	if err != nil {
+		t.Fatal("finding should work")
+	}
+	assert.Equal(t, res.Name, "cmdtwo")
+
+	res, err = cmd.FindCmd([]string{"c"}, true)
+	if err == nil {
+		t.Fatal("should not find this child!")
+	}
+	assert.Nil(t, res)
+
+	res, err = cmd.FindCmd([]string{"cmd"}, true)
 	if err == nil {
 		t.Fatal("should not find this child!")
 	}

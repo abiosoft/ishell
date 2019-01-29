@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -94,19 +95,34 @@ func (c Cmd) HelpText() string {
 }
 
 // findChildCmd returns the subcommand with matching name or alias.
-func (c *Cmd) findChildCmd(name string) *Cmd {
+func (c *Cmd) findChildCmd(name string, partialMatch bool) *Cmd {
 	// find perfect matches first
 	if cmd, ok := c.children[name]; ok {
 		return cmd
 	}
 
+	var prefixes []*Cmd
+
 	// find alias matching the name
 	for _, cmd := range c.children {
+		if partialMatch && strings.HasPrefix(cmd.Name, name) {
+			prefixes = append(prefixes, cmd)
+		}
+
 		for _, alias := range cmd.Aliases {
 			if alias == name {
 				return cmd
 			}
+
+			if partialMatch && strings.HasPrefix(alias, name) {
+				prefixes = append(prefixes, cmd)
+			}
 		}
+	}
+
+	// allow only unique partial match
+	if len(prefixes) == 1 {
+		return prefixes[0]
 	}
 
 	return nil
@@ -114,10 +130,10 @@ func (c *Cmd) findChildCmd(name string) *Cmd {
 
 // FindCmd finds the matching Cmd for args.
 // It returns the Cmd and the remaining args.
-func (c Cmd) FindCmd(args []string) (*Cmd, []string) {
+func (c Cmd) FindCmd(args []string, partialMatch bool) (*Cmd, []string) {
 	var cmd *Cmd
 	for i, arg := range args {
-		if cmd1 := c.findChildCmd(arg); cmd1 != nil {
+		if cmd1 := c.findChildCmd(arg, partialMatch); cmd1 != nil {
 			cmd = cmd1
 			c = *cmd
 			continue
