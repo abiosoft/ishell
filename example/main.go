@@ -14,6 +14,9 @@ import (
 func main() {
 	shell := ishell.New()
 
+	// allow commands' partial match (prefix)
+	shell.PartialMatch(true)
+
 	// display info.
 	shell.Println("Sample Interactive Shell")
 

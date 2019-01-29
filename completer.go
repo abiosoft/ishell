@@ -3,12 +3,13 @@ package ishell
 import (
 	"strings"
 
-	"github.com/flynn-archive/go-shlex"
+	shlex "github.com/flynn-archive/go-shlex"
 )
 
 type iCompleter struct {
-	cmd      *Cmd
-	disabled func() bool
+	cmd          *Cmd
+	disabled     func() bool
+	partialMatch bool
 }
 
 func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
@@ -45,7 +46,7 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 }
 
 func (ic iCompleter) getWords(w []string) (s []string) {
-	cmd, args := ic.cmd.FindCmd(w)
+	cmd, args := ic.cmd.FindCmd(w, ic.partialMatch)
 	if cmd == nil {
 		cmd, args = ic.cmd, w
 	}

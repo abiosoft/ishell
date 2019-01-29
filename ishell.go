@@ -49,6 +49,7 @@ type Shell struct {
 	active            bool
 	activeMutex       sync.RWMutex
 	ignoreCase        bool
+	partialMatch      bool
 	customCompleter   bool
 	multiChoiceActive bool
 	haltChan          chan struct{}
@@ -265,7 +266,7 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 			str[i] = strings.ToLower(str[i])
 		}
 	}
-	cmd, args := s.rootCmd.FindCmd(str)
+	cmd, args := s.rootCmd.FindCmd(str, s.partialMatch)
 	if cmd == nil {
 		return false, nil
 	}
@@ -358,7 +359,14 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 }
 
 func (s *Shell) initCompleters() {
-	s.setCompleter(iCompleter{cmd: s.rootCmd, disabled: func() bool { return s.multiChoiceActive }})
+	ic := iCompleter{
+		cmd: s.rootCmd,
+		disabled: func() bool {
+			return s.multiChoiceActive
+		},
+		partialMatch: s.partialMatch,
+	}
+	s.setCompleter(ic)
 }
 
 func (s *Shell) setCompleter(completer readline.AutoCompleter) {
@@ -640,6 +648,13 @@ func buildOptionsStrings(options []string, selected []int, index int) []string {
 // If true, commands must be registered in lower cases.
 func (s *Shell) IgnoreCase(ignore bool) {
 	s.ignoreCase = ignore
+}
+
+// PartialMatch specifies whether commands should match partially.
+// Defaults to false i.e. commands must exactly match
+// If true, unique prefixes should match commands.
+func (s *Shell) PartialMatch(partialMatch bool) {
+	s.partialMatch = partialMatch
 }
 
 // ProgressBar returns the progress bar for the shell.
