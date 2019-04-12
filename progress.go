@@ -119,17 +119,25 @@ func (p *progressBarImpl) write(s string) error {
 }
 
 func (p *progressBarImpl) erase(n int) {
-	for i := 0; i < n; i++ {
-		p.writer.Write([]byte{'\b'})
+	// Don't use '\b' - it's only move cursor to back
+	b := make([]byte, 0, n+2)
+	b = append(b, '\r')
+	for i := 0; i < n; i ++ {
+		b = append(b, ' ')
 	}
+	b = append(b, '\r')
+	p.writer.Write(b)
 }
 
 func (p *progressBarImpl) done() {
 	p.wMutex.Lock()
 	defer p.wMutex.Unlock()
 
-	p.erase(p.writtenLen)
-	fmt.Fprintln(p.writer, p.final)
+	if p.final != "" {
+		p.erase(p.writtenLen)
+		fmt.Fprintln(p.writer, p.final)
+	}
+
 }
 
 func (p *progressBarImpl) output() string {
