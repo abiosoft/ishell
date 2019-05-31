@@ -27,9 +27,9 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	prefix := ""
 	if len(words) > 0 && pos > 0 && line[pos-1] != ' ' {
 		prefix = words[len(words)-1]
-		cWords = ic.getWords(words[:len(words)-1])
+		cWords = ic.getWords(prefix, words[:len(words)-1])
 	} else {
-		cWords = ic.getWords(words)
+		cWords = ic.getWords(prefix, words)
 	}
 
 	var suggestions [][]rune
@@ -44,10 +44,13 @@ func (ic iCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
 	return suggestions, len(prefix)
 }
 
-func (ic iCompleter) getWords(w []string) (s []string) {
+func (ic iCompleter) getWords(prefix string, w []string) (s []string) {
 	cmd, args := ic.cmd.FindCmd(w)
 	if cmd == nil {
 		cmd, args = ic.cmd, w
+	}
+	if cmd.CompleterWithPrefix != nil {
+		return cmd.CompleterWithPrefix(prefix, args)
 	}
 	if cmd.Completer != nil {
 		return cmd.Completer(args)
