@@ -28,6 +28,13 @@ type Cmd struct {
 	// A non-nil Completer overrides the default behaviour.
 	Completer func(args []string) []string
 
+	// CompleterWithPrefix is custom autocomplete like
+	// for Completer, but also provides the prefix
+	// already so far to the completion function
+	// If both Completer and CompleterWithPrefix are given,
+	// CompleterWithPrefix takes precedence
+	CompleterWithPrefix func(prefix string, args []string) []string
+
 	// subcommands.
 	children map[string]*Cmd
 }
