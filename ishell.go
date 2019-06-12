@@ -427,10 +427,7 @@ func (s *Shell) SetHistoryPath(path string) {
 // SetHomeHistoryPath is a convenience method that sets the history path
 // in user's home directory.
 func (s *Shell) SetHomeHistoryPath(path string) {
-	home := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		home = os.Getenv("USERPROFILE")
-	}
+	home, _ := os.UserHomeDir()
 	abspath := filepath.Join(home, path)
 	s.SetHistoryPath(abspath)
 }
