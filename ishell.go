@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -427,10 +428,21 @@ func (s *Shell) SetHistoryPath(path string) {
 // SetHomeHistoryPath is a convenience method that sets the history path
 // in user's home directory.
 func (s *Shell) SetHomeHistoryPath(path string) {
-	home := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		home = os.Getenv("USERPROFILE")
+	var home string
+
+	// Try to get the home directory with user.Current.
+	// If error occurs, use environment variables
+	user, err := user.Current()
+	if err == nil {
+		home = user.HomeDir
+	} else {
+		if runtime.GOOS == "windows" {
+			home = os.Getenv("USERPROFILE")
+		} else {
+			home = os.Getenv("HOME")
+		}
 	}
+
 	abspath := filepath.Join(home, path)
 	s.SetHistoryPath(abspath)
 }
