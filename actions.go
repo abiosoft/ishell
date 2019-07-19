@@ -109,10 +109,7 @@ func (s *shellActionsImpl) ReadMultiLinesFunc(f func(string) bool) string {
 
 func (s *shellActionsImpl) ReadMultiLines(terminator string) string {
 	return s.ReadMultiLinesFunc(func(line string) bool {
-		if strings.HasSuffix(strings.TrimSpace(line), terminator) {
-			return false
-		}
-		return true
+		return !strings.HasSuffix(strings.TrimSpace(line), terminator)
 	})
 }
 
