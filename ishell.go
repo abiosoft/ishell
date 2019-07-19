@@ -53,7 +53,6 @@ type Shell struct {
 	customCompleter   bool
 	multiChoiceActive bool
 	haltChan          chan struct{}
-	historyFile       string
 	autoHelp          bool
 	rawArgs           []string
 	progressBar       ProgressBar
