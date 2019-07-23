@@ -701,9 +701,6 @@ func getPosition() (int, int, error) {
 	fmt.Printf("\033[6n")
 	var out string
 	reader := bufio.NewReader(os.Stdin)
-	if err != nil {
-		return 0, 0, err
-	}
 	for {
 		b, err := reader.ReadByte()
 		if err != nil || b == 'R' {
