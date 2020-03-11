@@ -37,14 +37,14 @@ func addDefaultFuncs(s *Shell) {
 		Func: clearFunc,
 	})
   s.Interrupt(interruptFunc)
-  s.FilterInput(filterInput)
+  s.FilterInput(filterInputFunc)
 }
 
-func filterInput(r rune) (rune, bool){
+func filterInputFunc(r rune) (rune, bool){
   switch r {
-  // block CtrlZ feature
-  case readline.CharCtrlZ:
-  return r, false
+    // block CtrlZ feature
+    case readline.CharCtrlZ:
+    return r, false
   }
   return r, true
 }
