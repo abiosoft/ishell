@@ -1,7 +1,8 @@
 package ishell
 
 import (
-	"os"
+  "github.com/abiosoft/readline"
+  "os"
 )
 
 func exitFunc(c *Context) {
@@ -35,7 +36,17 @@ func addDefaultFuncs(s *Shell) {
 		Help: "clear the screen",
 		Func: clearFunc,
 	})
-	s.Interrupt(interruptFunc)
+  s.Interrupt(interruptFunc)
+  s.FilterInput(filterInput)
+}
+
+func filterInput(r rune) (rune, bool){
+  switch r {
+  // block CtrlZ feature
+  case readline.CharCtrlZ:
+  return r, false
+  }
+  return r, true
 }
 
 func interruptFunc(c *Context, count int, line string) {
