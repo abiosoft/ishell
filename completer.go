@@ -3,7 +3,7 @@ package ishell
 import (
 	"strings"
 
-	"github.com/flynn-archive/go-shlex"
+	"github.com/google/shlex"
 )
 
 type iCompleter struct {
