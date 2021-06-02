@@ -2,14 +2,14 @@
 
 ishell is an interactive shell library for creating interactive cli applications.
 
-[![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/abiosoft/ishell)
+[![Go Reference](https://pkg.go.dev/badge/github.com/abiosoft/ishell/v2.svg)](https://pkg.go.dev/github.com/abiosoft/ishell/v2)
 [![Go Report Card](https://goreportcard.com/badge/github.com/abiosoft/ishell)](https://goreportcard.com/report/github.com/abiosoft/ishell)
 
 ## Usage
 
 ```go
 import "strings"
-import "github.com/abiosoft/ishell"
+import "github.com/abiosoft/ishell/v2"
 
 func main(){
     // create new shell.
