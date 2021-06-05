@@ -53,7 +53,7 @@ func (ic iCompleter) getWords(prefix string, w []string) (s []string) {
 		return cmd.CompleterWithPrefix(prefix, args)
 	}
 	if cmd.Completer != nil {
-		return cmd.Completer(args)
+		s = append(s, cmd.Completer(args)...)
 	}
 	for k := range cmd.children {
 		s = append(s, k)
