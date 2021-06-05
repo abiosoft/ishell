@@ -93,7 +93,7 @@ func (s *shellReader) readLine(consumer chan lineString) {
 	// reset prompt
 	s.scanner.SetPrompt(shellPrompt)
 
-	ls := lineString{string(line), err}
+	ls := lineString{line, err}
 	consumer <- ls
 	s.reading = false
 }
