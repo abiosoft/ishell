@@ -16,7 +16,6 @@ type (
 
 	shellReader struct {
 		scanner      *readline.Instance
-		consumers    chan lineString
 		reading      bool
 		readingMulti bool
 		buf          *bytes.Buffer
