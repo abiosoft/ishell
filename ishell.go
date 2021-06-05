@@ -268,10 +268,13 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 	}
 	cmd, args := s.rootCmd.FindCmd(str)
 	if cmd == nil {
+		if args[0] == "?" {
+			s.Println(s.HelpText())
+		}
 		return false, nil
 	}
 	// trigger help if func is not registered or auto help is true
-	if cmd.Func == nil || (s.autoHelp && len(args) == 1 && args[0] == "help") {
+	if cmd.Func == nil || (s.autoHelp && len(args) == 1 && (args[0] == "help" || args[0] == "?")) {
 		s.Println(cmd.HelpText())
 		return true, nil
 	}
