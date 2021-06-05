@@ -42,6 +42,7 @@ var (
 type Shell struct {
 	rootCmd           *Cmd
 	generic           func(*Context)
+  filterInput       func(rune) (rune, bool)
 	interrupt         func(*Context, int, string)
 	interruptCount    int
 	eof               func(*Context)
@@ -158,7 +159,8 @@ func (s *Shell) prepareRun() {
 	if !s.customCompleter {
 		s.initCompleters()
 	}
-	s.activeMutex.Lock()
+  s.initFilterFunc()
+  s.activeMutex.Lock()
 	s.active = true
 	s.activeMutex.Unlock()
 
@@ -374,6 +376,12 @@ func (s *Shell) CustomCompleter(completer readline.AutoCompleter) {
 	s.setCompleter(completer)
 }
 
+func (s *Shell) initFilterFunc() {
+  config := s.reader.scanner.Config.Clone()
+  config.FuncFilterInputRune = s.filterInput
+  s.reader.scanner.SetConfig(config)
+}
+
 // AddCmd adds a new command handler.
 // This only adds top level commands.
 func (s *Shell) AddCmd(cmd *Cmd) {
@@ -406,6 +414,11 @@ func (s *Shell) AutoHelp(enable bool) {
 // i.e. any input apart from Ctrl-c resets count to 0.
 func (s *Shell) Interrupt(f func(c *Context, count int, input string)) {
 	s.interrupt = f
+}
+
+// FilterInput add a function filter input rune (Ctrl-z)
+func (s *Shell) FilterInput(f func(r rune) (rune, bool)) {
+  s.filterInput = f
 }
 
 // EOF adds a function to handle End of File input (Ctrl-d).
