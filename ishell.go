@@ -344,7 +344,7 @@ func (s *Shell) readMultiLinesFunc(f func(string) bool) (string, error) {
 		var line string
 		line, err = s.readLine()
 		fmt.Fprint(&lines, line)
-		if !f(line) || err != nil {
+		if (!f(line) || err != nil) && isQuoteClosed(lines.String()) {
 			break
 		}
 		fmt.Fprintln(&lines)
@@ -717,4 +717,12 @@ func getPosition() (int, int, error) {
 	}
 
 	return col, row, nil
+}
+
+func isQuoteClosed(lines string) bool {
+	_, err := shlex.Split(lines)
+	if err != nil && err.Error() == "EOF found when expecting closing quote." {
+		return false
+	}
+	return true
 }
