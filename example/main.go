@@ -169,7 +169,6 @@ func main() {
 			Help: "try auto complete",
 			LongHelp: `Try dynamic autocomplete by adding and removing words.
 Then view the autocomplete by tabbing after "words" subcommand.
-
 This is an example of a long help.`,
 		}
 		autoCmd.AddCmd(&ishell.Cmd{
@@ -210,7 +209,6 @@ This is an example of a long help.`,
 			lines := ""
 			line := `%d. This is a paged text input.
 This is another line of it.
-
 `
 			for i := 0; i < 100; i++ {
 				lines += fmt.Sprintf(line, i+1)
