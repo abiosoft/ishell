@@ -1,6 +1,6 @@
 module github.com/sdbeard/ishell/v2
 
-go 1.16
+go 1.17
 
 require (
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db
