@@ -3,11 +3,9 @@
 
 package ishell
 
-import (
-	"github.com/arrow2nd/readline"
-)
-
 func clearScreen(s *Shell) error {
+	// PR: ClearScreen function corrected (@shadowshot-x)
+	// link: https://github.com/abiosoft/ishell/pull/146
 	_, err := s.writer.Write([]byte("\033[H\033[2J"))
 	return err
 }
