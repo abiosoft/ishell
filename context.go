@@ -1,8 +1,10 @@
 package ishell
 
+import "sync"
+
 // Context is an ishell context. It embeds ishell.Actions.
 type Context struct {
-	contextValues
+	*contextValues
 	progressBar ProgressBar
 	err         error
 
@@ -30,32 +32,44 @@ func (c *Context) ProgressBar() ProgressBar {
 }
 
 // contextValues is the map for values in the context.
-type contextValues map[string]interface{}
+type contextValues struct {
+	vals map[string]interface{}
+	*sync.RWMutex
+}
 
 // Get returns the value associated with this context for key, or nil
 // if no value is associated with key. Successive calls to Get with
 // the same key returns the same result.
-func (c contextValues) Get(key string) interface{} {
-	return c[key]
+func (c *contextValues) Get(key string) interface{} {
+	c.RLock()
+	defer c.RUnlock()
+	return c.vals[key]
 }
 
 // Set sets the key in this context to value.
 func (c *contextValues) Set(key string, value interface{}) {
-	if *c == nil {
-		*c = make(map[string]interface{})
+	if c.vals == nil {
+		c.vals = make(map[string]interface{})
+		c.RWMutex = &sync.RWMutex{}
 	}
-	(*c)[key] = value
+	c.Lock()
+	c.vals[key] = value
+	c.Unlock()
 }
 
 // Del deletes key and its value in this context.
-func (c contextValues) Del(key string) {
-	delete(c, key)
+func (c *contextValues) Del(key string) {
+	c.Lock()
+	delete(c.vals, key)
+	c.Unlock()
 }
 
 // Keys returns all keys in the context.
-func (c contextValues) Keys() (keys []string) {
-	for key := range c {
+func (c *contextValues) Keys() (keys []string) {
+	c.RLock()
+	for key := range c.vals {
 		keys = append(keys, key)
 	}
+	c.RUnlock()
 	return
 }
