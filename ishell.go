@@ -669,10 +669,10 @@ func newContext(s *Shell, cmd *Cmd, args []string) *Context {
 		Args:        args,
 		RawArgs:     s.rawArgs,
 		Cmd:         *cmd,
-		contextValues: func() contextValues {
-			values := contextValues{}
-			for k := range s.contextValues {
-				values[k] = s.contextValues[k]
+		contextValues: func() *contextValues {
+			values := &contextValues{}
+			for k := range s.contextValues.vals {
+				values.Set(k, s.contextValues.vals[k])
 			}
 			return values
 		}(),
