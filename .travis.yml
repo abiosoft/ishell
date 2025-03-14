@@ -5,4 +5,4 @@ script:
   - go test -v ./...
   - go build
 go:
-  - 1.10.x
+  - 1.24.x
