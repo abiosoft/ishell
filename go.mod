@@ -1,6 +1,6 @@
-module github.com/abiosoft/ishell/v2
+module github.com/neighbads/ishell/v2
 
-go 1.16
+go 1.18
 
 require (
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db

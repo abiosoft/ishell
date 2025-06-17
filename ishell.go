@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -271,12 +272,16 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 		return false, nil
 	}
 	// trigger help if func is not registered or auto help is true
-	if cmd.Func == nil || (s.autoHelp && len(args) == 1 && args[0] == "help") {
+	if (cmd.Func == nil && cmd.FuncWithArg == nil) || (s.autoHelp && len(args) == 1 && args[0] == "help") {
 		s.Println(cmd.HelpText())
 		return true, nil
 	}
 	c := newContext(s, cmd, args)
-	cmd.Func(c)
+	if cmd.FuncWithArg != nil {
+		cmd.FuncWithArg(c, cmd.FuncArg)
+	} else {
+		cmd.Func(c)
+	}
 	return true, c.err
 }
 
@@ -286,6 +291,19 @@ func (s *Shell) readLine() (line string, err error) {
 	go s.reader.readLine(consumer)
 	ls := <-consumer
 	return ls.line, ls.err
+}
+
+func (s *Shell) parseRawArgs(lines string) []string {
+	re := regexp.MustCompile(`"[^"]*"|[^\s]+`)
+	rawArgs := re.FindAllString(lines, -1)
+
+	for i, arg := range rawArgs {
+		if arg[0] == '"' && arg[len(arg)-1] == '"' {
+			rawArgs[i] = arg[1 : len(arg)-1]
+		}
+	}
+
+	return rawArgs
 }
 
 func (s *Shell) read() ([]string, error) {
@@ -308,7 +326,7 @@ func (s *Shell) read() ([]string, error) {
 		return strings.HasSuffix(strings.TrimSpace(line), "\\")
 	})
 
-	s.rawArgs = strings.Fields(lines)
+	s.rawArgs = s.parseRawArgs(lines)
 
 	if heredoc {
 		s := strings.SplitN(lines, "<<", 2)

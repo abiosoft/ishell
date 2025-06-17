@@ -15,6 +15,8 @@ type Cmd struct {
 	Aliases []string
 	// Function to execute for the command.
 	Func func(c *Context)
+	// Function to execute for the command. with arg
+	FuncWithArg func(c *Context, arg any)
 	// One liner help message for the command.
 	Help string
 	// More descriptive help message for the command.
@@ -37,6 +39,9 @@ type Cmd struct {
 
 	// subcommands.
 	children map[string]*Cmd
+
+	// Func Arg
+	FuncArg any
 }
 
 // AddCmd adds cmd as a subcommand.
