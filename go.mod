@@ -1,4 +1,4 @@
-module github.com/neighbads/ishell/v2
+module github.com/precla/ishell/v2
 
 go 1.18
 
