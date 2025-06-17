@@ -9,7 +9,7 @@ func exitFunc(c *Context) {
 }
 
 func helpFunc(c *Context) {
-	c.Println(c.HelpText())
+	c.Print(c.HelpText())
 }
 
 func clearFunc(c *Context) {

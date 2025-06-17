@@ -342,6 +342,9 @@ ishell is in active development and can still change significantly.
 MIT
 
 ## Credits
+Library | Use
+------- | -----
+[github.com/google/shlex](https://github.com/google/shlex) | splitting input into command and args.
 
 | Library                                                                        | Use                                    |
 | ------------------------------------------------------------------------------ | -------------------------------------- |
