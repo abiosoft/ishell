@@ -64,6 +64,7 @@ type Shell struct {
 	lineTerminator     string
 	specialTerminators []string
 	backSlashCmds      []string
+	backSlashFirstOnly bool
 	quitKeywords       []string
 	contextValues
 	Actions
@@ -78,6 +79,9 @@ type UninterpretedConfig struct {
 	SpecialTerminators []string
 	// Prefix strings for single line commands that don't require a terminator. Backslash commands must start with '\'
 	BackSlashCmds []string
+	// If set, only the first line of input is checked against BackSlashCmds, so a backslash line inside a
+	// statement, such as one inside a quoted string, does not end the input.
+	BackSlashCmdsFirstLineOnly bool
 	// Quit keywords to exit the shell if discovered
 	QuitKeywords []string
 }
@@ -108,6 +112,7 @@ func NewUninterpreted(conf *UninterpretedConfig) *Shell {
 	shell.lineTerminator = conf.LineTerminator
 	shell.specialTerminators = conf.SpecialTerminators
 	shell.backSlashCmds = conf.BackSlashCmds
+	shell.backSlashFirstOnly = conf.BackSlashCmdsFirstLineOnly
 	shell.quitKeywords = conf.QuitKeywords
 
 	return shell
@@ -367,6 +372,7 @@ func (s *Shell) readUninterpreted() (string, error) {
 	if s.lineTerminator != "" {
 		firstLine := true
 		lines, err = s.readMultiLinesFunc(func(line string) (keepReading bool) {
+			onFirstLine := firstLine
 			if firstLine {
 				firstLine = false
 				if matches := delimiterRegex.FindStringSubmatch(line); len(matches) == 2 {
@@ -391,9 +397,11 @@ func (s *Shell) readUninterpreted() (string, error) {
 					return false
 				}
 			}
-			for _, sc := range s.backSlashCmds {
-				if strings.HasPrefix(strings.TrimSpace(line), sc) {
-					return false
+			if onFirstLine || !s.backSlashFirstOnly {
+				for _, sc := range s.backSlashCmds {
+					if strings.HasPrefix(strings.TrimSpace(line), sc) {
+						return false
+					}
 				}
 			}
 
